@@ -1,0 +1,6 @@
+$ app hello --arg2 1
+arg1: hello, arg2: 1
+
+$ app
+missing required argument: 'arg1'
+run with --help for more information

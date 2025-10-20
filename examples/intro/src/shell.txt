@@ -1,0 +1,20 @@
+$ app --server example.org --secure a/b/c
+https://example.org/a/b/c
+
+$ app
+missing required argument: 'path'
+run with --help for more information
+
+$ app --help
+Usage: main [options] path
+
+This is an example app. It shows how a command line interface can be generated from various kinds of method parameters.
+
+Options:
+  --color <mode>        Set color mode (auto, always, never)
+  --completion <shell>  Generate shell completion script
+  --help                Show help message
+  --secure              this is a flag
+  --server <string>     a sample named parameter
+Positional arguments:
+  path                  a positional parameter

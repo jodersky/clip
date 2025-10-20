@@ -1,0 +1,37 @@
+$ app --num 42 --num2 1.1 --path /a/b/c --key-value hello=2 --key-values a=1 --key-values b=2
+num=42
+num2=1.1
+path=/a/b/c
+keyValue=(hello,2)
+keyValues=List((a,1), (b,2))
+keyValuesMap=Map()
+
+$ app --num 1.1
+error invalid value for '--num': '1.1' is not an integral number
+run with --help for more information
+
+$ app --help
+Usage: main [options]
+
+Options:
+  --color <mode>
+    Set color mode (auto, always, never)
+
+  --completion <shell>
+    Generate shell completion script
+
+  --help 
+    Show help message
+
+  --key-value <string=integer>
+
+  --key-values <string=integer>
+
+  --key-values-map <string=integer>
+
+  --num <integer>
+
+  --num2 <float>
+
+  --path <path>
+

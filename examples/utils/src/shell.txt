@@ -1,0 +1,5 @@
+$ app
+Hello, World!
+You entered: 0
+Processing
+Reading bytes

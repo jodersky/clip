@@ -1,0 +1,86 @@
+//| mill-version: 1.0.6
+
+import mill._, scalalib._, scalajslib._, scalanativelib._, scalafmt._
+
+val scala3 = "3.7.1"
+val scalaNative = "0.5.9"
+
+object thirdparty:
+  val oslib = mvn"com.lihaoyi::os-lib::0.11.6"
+  val utest = mvn"com.lihaoyi::utest::0.9.1"
+
+trait ClipModule extends ScalaModule with ScalafmtModule {
+
+  def moduleDir = super.moduleDir / os.up
+
+  def scalaVersion = scala3
+
+  def scalacOptions = Seq("-deprecation", "-feature")
+
+  def mvnDeps = Seq(
+    thirdparty.oslib
+  )
+
+  trait Tests extends ScalaTests {
+    def scalacOptions = Seq("-deprecation", "-explain")
+    def testFramework = "utest.runner.Framework"
+    def mvnDeps = Seq(
+      thirdparty.utest
+    )
+  }
+
+}
+
+object clip extends Module:
+  object jvm extends ClipModule:
+    def sourcesFolders = Seq("src", "src-jvm")
+    object test extends Tests
+
+  object native extends ClipModule with ScalaNativeModule:
+    def sourcesFolders = Seq("src", "src-native")
+
+    def scalaNativeVersion = scalaNative
+    object test extends Tests with ScalaNativeTests
+
+object examples extends Module:
+
+  object testutil extends ScalaNativeModule:
+    def scalaNativeVersion = scalaNative
+    def scalaVersion = scala3
+    def mvnDeps = Seq(
+      thirdparty.utest,
+      thirdparty.oslib
+    )
+
+  // we only test examples with scalanative, since startup is faster
+  trait ExampleApp extends ScalaNativeModule:
+    self =>
+    def scalaNativeVersion = scalaNative
+    def scalaVersion = scala3
+    def moduleDeps = Seq(clip.native, testutil)
+
+    def scalacOptions = Seq("-deprecation")
+
+    def linkApp = Task:
+      os.copy(nativeLink().path, Task.dest / "app")
+      PathRef(Task.dest)
+
+    // def releaseMode = mill.scalanativelib.api.ReleaseMode.ReleaseFull
+    // def lto = mill.scalanativelib.api.LTO.Full
+
+    object test extends ScalaNativeTests:
+      def testFramework = "utest.runner.Framework"
+      def mvnDeps = Seq(
+        thirdparty.utest
+      )
+      def moduleDeps = super.moduleDeps ++ Seq(testutil)
+      def forkEnv = Map(
+        "SNIPPET_FILE" -> (self.moduleDir / "src" / "shell.txt").toString,
+        "PATH" -> s"${self.linkApp().path}:${sys.env("PATH")}"
+      )
+
+  object basic extends ExampleApp
+  object commands extends ExampleApp
+  object intro extends ExampleApp
+  object types extends ExampleApp
+  object utils extends ExampleApp
