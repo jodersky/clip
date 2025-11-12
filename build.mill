@@ -20,7 +20,7 @@ trait UtestModule extends ScalaModule with TestModule:
 trait Publish extends PublishModule:
   def publishVersion = "0.1.0"
   def pomSettings = PomSettings(
-    description = "clip",
+    description = "A Scala library for command line parsing",
     organization = "io.crashbox",
     url = "https://github.com/jodersky/clip",
     licenses = Seq(License.MIT),
