@@ -4,6 +4,7 @@ import clip.dispatch.Command
 import clip.dispatch.InvocationResult
 import clip.dispatch.InvokeEager
 import scala.annotation.StaticAnnotation
+import clip.derivation.ReadResult
 
 /** Annotate a function with `@command()` to make it callable from the command
   * line.
@@ -145,6 +146,14 @@ private def mainImpl(using
   * given parameter types globally.
   */
 trait Api extends ReaderApi with clip.completion.CompletionApi:
+
+  given readerFromString[A](using fs: clip.readers.FromString[A]): Reader[A]
+  with
+    def read(str: String): ReadResult[A] =
+      fs.fromString(str) match
+        case Left(msg)    => ReadResult.Error(msg)
+        case Right(value) => ReadResult.Success(value)
+    def typeName: String = fs.typeName
 
   /** Annotate a parameter with @arg to indicate that its value should be
     * provided by a command-line argument.
@@ -311,4 +320,4 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
       // not a tty, just use the default
       default
 
-object default extends Api with StandardReaders
+object default extends Api

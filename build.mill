@@ -1,6 +1,6 @@
 //| mill-version: 1.0.6
 
-import mill._, scalalib._, scalajslib._, scalanativelib._, scalafmt._
+import mill._, scalalib._, scalajslib._, scalanativelib._, scalafmt._, publish._
 
 val scala3 = "3.7.1"
 val scalaNative = "0.5.9"
@@ -8,39 +8,67 @@ val scalaNative = "0.5.9"
 object thirdparty:
   val oslib = mvn"com.lihaoyi::os-lib::0.11.6"
   val utest = mvn"com.lihaoyi::utest::0.9.1"
+  //val time = mvn"org.ekrich::sjavatime::1.4.0"
+  val time = mvn"io.github.cquiroz::scala-java-time::2.6.0"
+  val timeDb = mvn"io.github.cquiroz::scala-java-time-tzdb::2.6.0"
 
-trait ClipModule extends ScalaModule with ScalafmtModule {
+trait UtestModule extends ScalaModule with TestModule:
+  def scalacOptions = Seq("-deprecation", "-explain")
+  def testFramework = "utest.runner.Framework"
+  def mvnDeps = Seq(thirdparty.utest)
 
-  def moduleDir = super.moduleDir / os.up
-
-  def scalaVersion = scala3
-
-  def scalacOptions = Seq("-deprecation", "-feature")
-
-  def mvnDeps = Seq(
-    thirdparty.oslib
+trait Publish extends PublishModule:
+  def publishVersion = "0.1.0"
+  def pomSettings = PomSettings(
+    description = "clip",
+    organization = "io.crashbox",
+    url = "https://github.com/jodersky/clip",
+    licenses = Seq(License.MIT),
+    versionControl = VersionControl.github("jodersky", "clip"),
+    developers = Seq(
+      Developer("jodersky", "Jakob Odersky", "https://github.com/jodersky")
+    )
   )
 
-  trait Tests extends ScalaTests {
-    def scalacOptions = Seq("-deprecation", "-explain")
-    def testFramework = "utest.runner.Framework"
-    def mvnDeps = Seq(
-      thirdparty.utest
-    )
+object readers extends Module:
+  trait ReadersModule extends ScalaModule with ScalafmtModule with Publish:
+    def scalaVersion = scala3
+    def scalacOptions = Seq("-deprecation", "-feature", "-release", "21")
+    def artifactName = "clip-readers"
+    def mvnDeps = Seq(thirdparty.oslib)
+    def moduleDir = super.moduleDir / os.up
+  object jvm extends ReadersModule {
+    object test extends ScalaTests with UtestModule
   }
-
-}
+  object native extends ReadersModule with ScalaNativeModule:
+    def mvnDeps = super.mvnDeps() ++ Seq(thirdparty.time, thirdparty.timeDb)
+    def scalaNativeVersion = scalaNative
+    object test extends ScalaNativeTests with UtestModule:
+      def nativeLinkStubs = true
 
 object clip extends Module:
+  trait ClipModule extends ScalaModule with ScalafmtModule with Publish:
+    def moduleDir = super.moduleDir / os.up
+    def scalaVersion = scala3
+    def scalacOptions = Seq("-deprecation", "-feature", "-release", "21")
+    def artifactName = "clip"
+    def mvnDeps = Seq(
+      thirdparty.oslib
+    )
   object jvm extends ClipModule:
     def sourcesFolders = Seq("src", "src-jvm")
-    object test extends Tests
+    def moduleDeps = Seq(readers.jvm)
+
+    // it's enough to check macros for only one configuration
+    def scalacOptions = super.scalacOptions() ++ Seq("-Xcheck-macros")
+
+    object test extends ScalaTests with UtestModule
 
   object native extends ClipModule with ScalaNativeModule:
     def sourcesFolders = Seq("src", "src-native")
-
     def scalaNativeVersion = scalaNative
-    object test extends Tests with ScalaNativeTests
+    def moduleDeps = Seq(readers.native)
+    object test extends ScalaNativeTests with UtestModule
 
 object examples extends Module:
 
@@ -67,12 +95,9 @@ object examples extends Module:
 
     // def releaseMode = mill.scalanativelib.api.ReleaseMode.ReleaseFull
     // def lto = mill.scalanativelib.api.LTO.Full
+    def nativeLinkStubs = true
 
-    object test extends ScalaNativeTests:
-      def testFramework = "utest.runner.Framework"
-      def mvnDeps = Seq(
-        thirdparty.utest
-      )
+    object test extends ScalaNativeTests with UtestModule:
       def moduleDeps = super.moduleDeps ++ Seq(testutil)
       def forkEnv = Map(
         "SNIPPET_FILE" -> (self.moduleDir / "src" / "shell.txt").toString,
