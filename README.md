@@ -98,7 +98,8 @@ on Linux and macOS, x86_64 and arm64.
   - [User directories](#user-directories)
 - [Custom API traits](#custom-api-traits)
 
-> [!NOTE] the examples shown here assume that the example code can be run as
+> [!NOTE]
+> the examples shown here assume that the example code can be run as
 > `./app`. If you'd like to play along, you have two options:
 > 1. clone the repo, and run `./mill examples.<name of example>` instead of `./app`
 > 2. use scala-cli, `./scala <example file> --` instead of `./app`
