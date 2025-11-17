@@ -176,12 +176,12 @@ object examples extends Module:
   object argrepeated extends ExampleApp
   object argtypes extends ExampleApp
   object argtypes2 extends ExampleApp
+  object argeager extends ExampleApp
   object commands extends ExampleApp
   object commandvalues extends ExampleApp
   object commandnested extends ExampleApp:
     def mainClass = None
   object exceptions extends ExampleApp
-  // object help extends ExampleApp
   object apitraits extends ExampleApp
 
   object `utils-output` extends ExampleApp
@@ -200,11 +200,11 @@ object examples extends Module:
     argrepeated,
     argtypes,
     argtypes2,
+    argeager,
     commands,
     commandvalues,
     commandnested,
     exceptions,
-    // help,
     apitraits,
     `utils-output`,
     `utils-ansi`,

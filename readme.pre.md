@@ -27,11 +27,11 @@ on Linux and macOS, x86_64 and arm64.
 - [Parameter annotations](#parameter-annotations)
   - [Repeated parameters](#repeated-parameters)
   - [Parameter types](#parameter-types)
+  - [Eager parameters](#eager-parameters)
 - [Subcommands `app server`, `app fetch`, etc](#subcommands-app-server-app-fetch-etc)
   - [Sharing parameters and values](#sharing-parameters-and-values)
   - [Nested subcommands](#nested-subcommands)
 - [Exception handling and error codes](#exception-handling-and-error-codes)
-- [Automatically generated `--help` messages](#automatically-generated---help-messages)
 - [Automatically generated bash completion, with dynamic completions](#automatically-generated-bash-completion-with-dynamic-completions)
 - [Utilities](#utilities)
   - [Output formatting](#output-formatting)
@@ -65,6 +65,10 @@ on Linux and macOS, x86_64 and arm64.
 
 [include:argtypes2]
 
+#### Eager parameters
+
+[include:argeager]
+
 ### Subcommands `app server`, `app fetch`, etc
 
 [include:commands]
@@ -80,10 +84,6 @@ on Linux and macOS, x86_64 and arm64.
 ### Exception handling and error codes
 
 [include:exceptions]
-
-### Automatically generated `--help` messages
-
-TODO
 
 ### Automatically generated bash completion, with dynamic completions
 
