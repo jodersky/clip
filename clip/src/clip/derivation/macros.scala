@@ -90,7 +90,8 @@ private class macros(using val qctx: Quotes):
       // annotation fields
       name: Expr[String],
       help: Expr[String],
-      version: Option[Expr[String]],
+      version: Expr[String],
+      eagers: Expr[Seq[clip.dispatch.EagerParam]],
       subcommands: Expr[Seq[Command[?, ?]]],
       // non-annotation fields
       isGroup: Boolean,
@@ -102,34 +103,30 @@ private class macros(using val qctx: Quotes):
   )
 
   def commandInfosForAnnot(method: Symbol, annot: Term): CommandInfo =
-    val (name0, help, versionExpr, subs, isGroup) = annot.asExpr match
-      case '{ command($name, $help, $version) } =>
-        (name, help, version, '{ Seq() }, false)
-      case '{ group($name, $help, $version, $subs) } =>
-        (name, help, version, subs, true)
+    val (name0, help, version, eagers, subs, isGroup) = annot.asExpr match
+      case '{ command($name, $help, $version, $eagers) } =>
+        (name, help, version, eagers, '{ Seq() }, false)
+      case '{ group($name, $help, $version, $eagers, $subs) } =>
+        (name, help, version, eagers, subs, true)
 
+    // Note 1: we can't call `valueOrAbort` directly on the name expression
+    // and compare with null, because a default parameter will not be inlined,
+    // but rather passed as a reference to a synthetic method containing the
+    // name "$default".
+    //
+    // Note 2: we want to check if the name is "unset" (i.e., left to
+    // default). In light of Note 1, The way we do this is slightly hacky: we
+    // simply check if the expression's term symbol name contains "$default".
+    // This works in practice, but it is technically possible that through some
+    // clever mechanism a *different* expression with a name containing
+    // "$default" could be passed in. If that is ever the case, we'd need to
+    // compare if name0's symbol actually matches the one declared in the
+    // annotation's default parameters.
     val name = name0.asTerm match
       case term if term.symbol.name.contains("$default$") =>
         Expr(clip.util.text.kebabify(method.name))
       case _ =>
         name0
-
-    // Note 1: we can't call `valueOrAbort` directly on the version
-    // expression and compare with null, because a default parameter will
-    // not be inlined, but rather passed as a reference to a synthetic
-    // method containing the name "$default".
-    //
-    // Note 2: we want to check if the version is "unset" (i.e., left to
-    // default). In light of Note 1, The way we do this is slightly hacky:
-    // we simply check if the expression's term symbol name contains
-    // "$default". This works in practice, but it is technically possible
-    // that through some clever mechanism a *different* expression with a
-    // name containing "$default" could be passed in. If that is ever the
-    // case, we'd need to compare if the versionExpr's symbol actually
-    // matches the one declared in the annotation's default parameters.
-    val version: Option[Expr[String]] =
-      if versionExpr.asTerm.symbol.name.contains("$default$") then None
-      else Some(versionExpr)
 
     val pinfos = paramInfosForMethod(method)
     val invokeFn = invoke(method, pinfos)
@@ -139,6 +136,7 @@ private class macros(using val qctx: Quotes):
           name = name,
           help = help,
           version = version,
+          eagers = eagers,
           subcommands = subs,
           isGroup = isGroup,
           methodSymbol = method,
@@ -168,19 +166,6 @@ private class macros(using val qctx: Quotes):
   ): Expr[Command[?, ?]] =
     (info.ctxType.asType, info.returnType.asType) match
       case ('[ctxType], '[resType]) =>
-        val eagers = collection.mutable.ListBuffer.empty[
-          Expr[(clip.dispatch.EagerParam)]
-        ]
-
-        eagers += '{ clip.dispatch.StandardEagerParams.help() }
-        if info.version.isDefined then
-          eagers += '{
-            clip.dispatch.StandardEagerParams.version(${ info.version.get })
-          }
-        if root then
-          eagers += '{ clip.dispatch.StandardEagerParams.completion() }
-          eagers += '{ clip.dispatch.StandardEagerParams.color() }
-
         '{
           val children: Map[String, Command[resType, ?]] =
             (
@@ -192,7 +177,12 @@ private class macros(using val qctx: Quotes):
                 }
             ).map(cmd => cmd.name -> cmd).toMap
 
-          val eag = ${ Expr.ofList(eagers.toList) }
+          // TODO: don't use clip.derivation.default here, but instead use the
+          // API trait pattern
+          val eagers = clip.derivation.default.eagerParams(
+            ${Expr(root)},
+            Option(${info.version})
+          ) ++ ${ info.eagers }
 
           Command[ctxType, resType](
             name = ${ info.name },
@@ -220,10 +210,10 @@ private class macros(using val qctx: Quotes):
                       )
                     }
               )
-            } ++ eag.map(_._1),
+            } ++ eagers.map(_._1),
             terminal = ${ Expr(!info.isGroup) },
             invoke = ${ info.invoke.asExprOf[Invoke[ctxType, resType]] },
-            eagerInvokes = eag.map(_._2)
+            eagerInvokes = eagers.map(_._2)
           )
         }
       case _ => sys.error("unreachable")

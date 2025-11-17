@@ -14,11 +14,14 @@ import clip.derivation.ReadResult
   *   A short description of the command, used in help messages
   * @param version
   *   An optional version string for the command
+  * @param eagers
+  *   An optional list of eager parameters to add to this command
   */
 class command(
     name: String = null,
     help: String = "",
-    version: String = null
+    version: String = null,
+    eagers: Seq[clip.dispatch.EagerParam] = Seq()
 ) extends StaticAnnotation
 
 /** A group can be used to pass a context into other commands
@@ -29,6 +32,8 @@ class command(
   *   A short description of the group, used in help messages
   * @param version
   *   An optional version string for the group
+  * @param eagers
+  *   An optional list of eager parameters to add to this group
   * @param subcommands
   *   An optional list of subcommands to add to this group
   */
@@ -36,6 +41,7 @@ class group(
     name: String = null,
     help: String = "",
     version: String = null,
+    eagers: Seq[clip.dispatch.EagerParam] = Seq(),
     subcommands: Seq[Command[?, ?]] = Seq()
 ) extends StaticAnnotation
 
@@ -250,7 +256,13 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
 
     InvocationResult.Success(builder.result())
 
-  def defaultEagerParams(root: Boolean, version: Option[String]): Seq[clip.dispatch.EagerParam] =
+  /** Eager parameters to add to each command
+    * @param root Whether this is the root command
+    * @param version If a version string was provided for the command
+    * @return
+    *   A sequence of eager parameters to add to the command
+    */
+  def eagerParams(root: Boolean, version: Option[String]): Seq[clip.dispatch.EagerParam] =
     val params = collection.mutable.ListBuffer.empty[clip.dispatch.EagerParam]
     params += clip.dispatch.StandardEagerParams.help()
 
