@@ -87,7 +87,9 @@ on Linux and macOS, x86_64 and arm64.
 
 ### Automatically generated bash completion, with dynamic completions
 
-TODO
+[include:completion1]
+
+[include:completion2]
 
 ### Utilities
 

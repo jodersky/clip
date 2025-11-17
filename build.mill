@@ -182,6 +182,8 @@ object examples extends Module:
   object commandnested extends ExampleApp:
     def mainClass = None
   object exceptions extends ExampleApp
+  object completion1 extends ExampleApp
+  object completion2 extends ExampleApp
   object apitraits extends ExampleApp
 
   object `utils-output` extends ExampleApp
@@ -191,7 +193,6 @@ object examples extends Module:
   object `utils-progress` extends ExampleApp
   object `utils-userdirs` extends ExampleApp
   object `utils-termutils` extends ExampleApp
-
 
   val all = Seq(
     intro,
@@ -205,6 +206,8 @@ object examples extends Module:
     commandvalues,
     commandnested,
     exceptions,
+    completion1,
+    completion2,
     apitraits,
     `utils-output`,
     `utils-ansi`,
