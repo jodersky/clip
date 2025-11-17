@@ -3,8 +3,8 @@
 Composable, declarative command-line parsing for Scala.
 
 Clip is a Scala library for creating command line interfaces, with minimal
-boilerplate. It is highly configurable, but comes with sensible defaults out of
-the box.
+boilerplate. It is highly configurable, comes with sensible defaults out of
+the box, and has batteries included.
 
 It aims to make the process of writing command line tools quick and fun.
 
@@ -17,11 +17,11 @@ Here is what it looks like:
 def hello(
     @clip.arg("--count", help = "Number of greetings")
     count: Int = 3,
-    @clip.arg("name",  help ="Your name")
+    @clip.arg("name", help = "Your name")
     name: String
 ): Unit =
-    for _ <- 0 until count do
-        clip.echo(s"Hello ${name}!")
+  for _ <- 0 until count do
+    clip.echo(s"Hello ${name}!")
 
 def main(args: Array[String]): Unit = clip.main(this, args)
 ```
@@ -764,7 +764,7 @@ Sometimes, you'd like completions to depend on other parameters. For example,
 a prior parameter might change some configuration that affects the valid
 values for a later parameter.
 
-In clip, you a dynamic completer can access the command context, which can be
+In clip, a dynamic completer can access the command context, which can be
 used to share information between parameters.
 
 Let's look at an example where the available completions for an `--item`
@@ -1159,6 +1159,34 @@ The provided path is: /foo/bar
 ```
 
 
+## Internals
+
+Clip is architected around 3 layers:
+
+1. A core command-line parsing system, which iterates over an array of strings
+   and associates values to parameters. This is implemented in the `clip.getopt`
+   package. This package is fully self-contained, and could be extracted if you
+   want to build a different higher-level API, all the while still using the
+   same command line syntax.
+
+2. A core command modeling layer. This uses a bunch of case classes to model a
+   hierarchy of commands. Each command is essentially a node that has:
+
+     - a definition of parameters
+     - a function to call which use said parameters
+     - zero or more children
+
+   This layer also implements an `invoke` function which, starting from a root
+   command, parses arguments (using the lower layer), and selects child commands
+   until calling a final command's function. This layer is contained in the
+   `clip.dispatch` package.
+
+3. A meta-programming layer, which defines API traits, annotations and macros to
+   construct layer 2 commands based on Scala syntax, and looks up readers. This
+   layer is contained in the `clip.derivation` package.
+
+Any frequently used values and types are exported into the root `clip` package.
+
 ## Acknowledgments
 
 Clip is inspired by a similarly-named Python project,
@@ -1180,9 +1208,9 @@ Here are a few other options to check out:
   subcommands which can share data.
 - [scala-argparse](github.com/jodersky/scala-argparse) Library for building
   command-line parsers, from the same author of this project. It can be thought
-  of as the predecessor to this project, and shares the command-line syntax
-  parser code. If you've used it, you'll notice the command-line grammar looks
-  very similar.
+  of as the predecessor to this project, and shares the command-line parser
+  code. If you've used it, you'll notice the command-line syntax looks very
+  similar.
 
 ## Changes
 

@@ -6,11 +6,11 @@
 def hello(
     @clip.arg("--count", help = "Number of greetings")
     count: Int = 3,
-    @clip.arg("name",  help ="Your name")
+    @clip.arg("name", help = "Your name")
     name: String
 ): Unit =
-    for _ <- 0 until count do
-        clip.echo(s"Hello ${name}!")
+  for _ <- 0 until count do
+    clip.echo(s"Hello ${name}!")
 
 def main(args: Array[String]): Unit = clip.main(this, args)
 //snippet:end
