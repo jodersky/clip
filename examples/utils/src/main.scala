@@ -5,15 +5,15 @@ def app() =
   // You can use clip's `echo` function for styling terminal output. It's like
   // println, but is aware of terminal capabilities and strips colors if not
   // running in a terminal.
-  clip.echo(clip.style("Hello, World!", fg = clip.Green, bold = true, underline = true))
+  clip.echo(clip.style(fg = clip.Green, bold = true, underline = true)("Hello, World!"))
 
   // You can also prompt the user for input. Here we ask for an integer.
   // When running in a non-interactive terminal, the default value will be used.
   clip.prompt[Int]("Enter a number", default = 0) match
     case 42 =>
-      clip.echo(clip.style("You found the meaning of life!", fg = clip.Green))
+      clip.echo(clip.style(fg = clip.Green)("You found the meaning of life!"))
     case value: Int =>
-      clip.echo(s"You entered: ${clip.style(value.toString, fg = clip.Cyan)}")
+      clip.echo(s"You entered: ${clip.style(fg = clip.Cyan)(value.toString)}")
 
   // You can also pause execution until the user presses Enter.
   // Again, in a non-interactive terminal this will be skipped.

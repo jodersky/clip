@@ -64,7 +64,7 @@ def invoke(
         for name <- missing do
           stderr.println(s"missing required argument: '$name'")
         for (name, reason) <- invalid do
-          stderr.println(s"error invalid value for '$name': $reason")
+          stderr.println(s"invalid value for '$name': $reason")
 
       if chain.last.params.exists(_.names.head == "--help") then
         stderr.println("run with --help for more information")

@@ -250,6 +250,19 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
 
     InvocationResult.Success(builder.result())
 
+  def defaultEagerParams(root: Boolean, version: Option[String]): Seq[clip.dispatch.EagerParam] =
+    val params = collection.mutable.ListBuffer.empty[clip.dispatch.EagerParam]
+    params += clip.dispatch.StandardEagerParams.help()
+
+    if version.isDefined then
+      params += clip.dispatch.StandardEagerParams.version(version.get)
+
+    if root then
+      params += clip.dispatch.StandardEagerParams.completion()
+      params += clip.dispatch.StandardEagerParams.color()
+
+    params.result()
+
   // TODO: should this really be in clip.derivation.Api?
   def prompt[A](
       message: String,

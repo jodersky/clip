@@ -583,7 +583,7 @@ private class macros(using val qctx: Quotes):
       val group = nonterminals.head
 
       val mismatched = terminals.collect:
-        case cmd if !(cmd.ctxType =:= group.returnType) => cmd
+        case cmd if !(group.returnType <:< cmd.ctxType) => cmd
 
       if mismatched.nonEmpty then
         val message = "Command context type mismatch:\n" +

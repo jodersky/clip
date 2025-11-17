@@ -2,7 +2,7 @@
 
 import mill._, scalalib._, scalajslib._, scalanativelib._, scalafmt._, publish._
 
-val scala3 = "3.7.1"
+val scala3 = "3.7.4"
 val scalaNative = "0.5.9"
 
 object thirdparty:
@@ -97,6 +97,10 @@ object examples extends Module:
     // def lto = mill.scalanativelib.api.LTO.Full
     def nativeLinkStubs = true
 
+    def nativeCompileOptions = Seq("-target", "aarch64-linux-musl")
+    def nativeLinkingOptions = Seq("-target", "aarch64-linux-musl")
+    //def nativeGC = "boehm"
+
     object test extends ScalaNativeTests with UtestModule:
       def moduleDeps = super.moduleDeps ++ Seq(testutil)
       def forkEnv = Map(
@@ -109,3 +113,203 @@ object examples extends Module:
   object intro extends ExampleApp
   object types extends ExampleApp
   object utils extends ExampleApp
+
+object rexamples extends Module:
+  trait ExampleApp extends ScalaModule:
+    def moduleDeps = Seq(clip.jvm)
+    def scalaVersion = scala3
+    def sources = Task.Sources(moduleDir)
+    def exampleSource = Task.Source(moduleDir / "app.scala")
+
+    // TODO: for some reason, mill doesn't find the main class if it's defined
+    // in the root package (i.e. no package), and not in an object
+    def mainClass = Some("'app$package'")
+
+    def exampleFile = Task:
+      ExampleFile.fromFile(
+        exampleSource().path
+      )
+
+    def test() = Task.Command:
+      for (invocation0, expected) <- exampleFile().usageTests do
+        val invocation = invocation0
+          .replaceAll("\\$ ./app", assembly().path.toString)
+
+        Task.log.info(s"Running test: ${invocation}")
+
+        val result = os.proc(invocation.split(" ")).call(
+          stdin = os.Inherit,
+          stdout = os.Pipe,
+          stderr = os.Pipe,
+          mergeErrIntoOut = true,
+          check = false,
+          env = Map(
+            // suppress warnings on java 25 about illegal reflective access (TODO:
+            // remove once we upgrade to a newer scala version with fixed warnings)
+            "JAVA_OPTS" -> "--enable-native-access=ALL-UNNAMED --illegal-native-access=allow  --sun-misc-unsafe-memory-access=allow"
+          )
+        )
+
+        val output = result.out.text()
+
+        val outLines = output.linesIterator.map(_.trim()).mkString("\n")
+        val expectedLines = expected.linesIterator.map(_.trim()).mkString("\n")
+
+        assert(
+          outLines == expectedLines,
+          s"""|For invocation:
+              |${invocation}
+              |Expected:
+              |---
+              |${expectedLines}
+              |---
+              |Got:
+              |---
+              |${outLines}
+              |---
+              |""".stripMargin
+        )
+
+  object intro extends ExampleApp
+  object minimal extends ExampleApp
+  object argannots extends ExampleApp
+  object argrepeated extends ExampleApp
+  object argtypes extends ExampleApp
+  object commands extends ExampleApp
+  object commandvalues extends ExampleApp
+  object commandnested extends ExampleApp:
+    def mainClass = None
+  object exceptions extends ExampleApp
+  // object help extends ExampleApp
+  object apitraits extends ExampleApp
+
+  object `utils-output` extends ExampleApp
+  object `utils-ansi` extends ExampleApp
+  object `utils-input` extends ExampleApp
+  object `utils-launch` extends ExampleApp
+  object `utils-progress` extends ExampleApp
+  object `utils-userdirs` extends ExampleApp
+  object `utils-termutils` extends ExampleApp
+
+
+  val all = Seq(
+    intro,
+    minimal,
+    argannots,
+    argrepeated,
+    argtypes,
+    commands,
+    commandvalues,
+    commandnested,
+    exceptions,
+    // help,
+    apitraits,
+    `utils-output`,
+    `utils-ansi`,
+    `utils-input`,
+    `utils-launch`,
+    `utils-progress`,
+    `utils-userdirs`,
+    `utils-termutils`
+  )
+
+// update actual readme from snippets in example apps
+def readme() = Task.Command:
+  val Include = """\[include:(.+)\]""".r
+
+  val allExamples = Task.sequence(rexamples.all.map(_.exampleFile))()
+  val snippetMap = rexamples.all.map(_.moduleDir.last).zip(allExamples).toMap
+
+  val lines = os.read.lines(Task.ctx().workspace / "readme.pre.md")
+  os.write.over(
+    Task.ctx().workspace / "README.md",
+    lines.map:
+      case Include(name) =>
+        snippetMap(name).markdown
+
+      case other => other
+    .mkString("\n")
+  )
+
+/** A runnable scala file (via scala-cli), whose content can also be rendered as
+  * markdown.
+  *
+  * The idea is to write example code that serves multiple purposes:
+  * documentation as markdown and runnable example code, as well as testable
+  * code.
+  *
+  * The source files work the following way:
+  * - they are regular .scala files, runnable via scala-cli
+  * - comments within them will be extracted as markdown text
+  * - scala code can be marked as snippets to be extracted as code blocks in
+  *   markdown
+  * - usage examples can be provided in special comment blocks, which also be
+  *   rendered as snippets in markdown, and also be executed as tests to verify
+  *   that the output is as expected
+  */
+case class ExampleFile(
+  markdown: String,
+  usageTests: Seq[(String, String)] = Seq.empty
+) derives upickle.default.ReadWriter
+object ExampleFile:
+  def fromFile(
+    path: os.Path,
+    changeInvocation: String => String = s => s
+  ) =
+    val markdown = new StringBuilder
+    val usageTests = collection.mutable.ListBuffer.empty[(String, String)]
+
+    val lines = os.read(path).linesIterator
+
+    var line = ""
+    def readLine() = if lines.hasNext then line = lines.next() else line = null
+
+    readLine()
+
+    while line != null do
+      if line.trim().startsWith("//snippet:start") then
+        val startCol = line.indexOf("//snippet:start")
+        readLine()
+        markdown ++= "\n```scala\n"
+        while line != null && !line.trim().startsWith("//snippet:end") do
+          markdown ++= line.drop(startCol)
+          markdown ++= "\n"
+          readLine()
+
+        markdown ++= "```\n"
+        readLine()
+      else if line.trim().startsWith("//") && !line.trim().startsWith("//>") then
+        val startCol = line.indexOf("//") + 3
+        markdown ++= line.drop(startCol)
+        markdown ++= "\n"
+        readLine()
+      else if line.trim().startsWith("/* usage") then
+        val isSnippet = line.trim().startsWith("/* usage snippet")
+        val startCol = line.indexOf("/* usage")
+        readLine()
+        if line == null then sys.error("expected at least one line after usage")
+        val invocation = line.drop(startCol)
+        if isSnippet then
+          markdown ++= "\n```\n"
+          markdown ++= changeInvocation(invocation)
+          markdown ++= "\n"
+        readLine()
+        var expected = ""
+        while line != null && !line.trim().startsWith("*/") do
+          expected += line.drop(startCol)
+          expected += "\n"
+          if isSnippet then
+            markdown ++= line.drop(startCol)
+            markdown ++= "\n"
+          readLine()
+        readLine()
+        if isSnippet then
+          markdown ++= "```\n"
+        usageTests += ((invocation, expected))
+
+      else if line.isEmpty then
+        markdown ++= "\n"
+        readLine()
+      else
+        readLine()
+    ExampleFile(markdown.toString, usageTests.toSeq)

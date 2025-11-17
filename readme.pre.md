@@ -1,0 +1,154 @@
+# clip
+
+Composable, declarative command-line parsing for Scala.
+
+Clip is a Scala library for creating command line interfaces, with minimal
+boilerplate. It is highly configurable, but comes with sensible defaults out of
+the box.
+
+It aims to make the process of writing command line tools quick and fun.
+
+[include:intro]
+
+Clip is available for Scala on the JVM and Scala Native.
+
+You can include it directly from maven central:
+
+```scala
+mvn"io.crashbox::clip::0.1.1"
+```
+
+It relies on `os-lib`. JDK 21 or greater is required. Certain features only work
+on Linux and macOS, x86_64 and arm64.
+
+## Feature tour
+
+- [Annotation-based commands](#annotation-based-commands)
+- [Parameter annotations](#parameter-annotations)
+  - [Repeated parameters](#repeated-parameters)
+  - [Parameter types](#parameter-types)
+- [Subcommands `app server`, `app fetch`, etc](#subcommands-app-server-app-fetch-etc)
+  - [Sharing parameters and values](#sharing-parameters-and-values)
+  - [Nested subcommands](#nested-subcommands)
+- [Exception handling and error codes](#exception-handling-and-error-codes)
+- [Automatically generated `--help` messages](#automatically-generated---help-messages)
+- [Automatically generated bash completion, with dynamic completions](#automatically-generated-bash-completion-with-dynamic-completions)
+- [Utilities](#utilities)
+  - [Output formatting](#output-formatting)
+  - [ANSI color support](#ansi-color-support)
+  - [Reading input](#reading-input)
+  - [Launching applications](#launching-applications)
+  - [Progress bars](#progress-bars)
+  - [User directories](#user-directories)
+- [Custom API traits](#custom-api-traits)
+
+> [!NOTE] the examples shown here assume that the example code can be run as
+> `./app`. If you'd like to play along, you have two options:
+> 1. clone the repo, and run `./mill rexamples.<name of example>` instead of `./app`
+> 2. use scala-cli, `./scala <example file> --` instead of `./app`
+
+### Annotation-based commands
+
+[include:minimal]
+
+### Parameter annotations
+
+[include:argannots]
+
+#### Repeated parameters
+
+[include:argrepeated]
+
+#### Parameter types
+
+[include:argtypes]
+
+### Subcommands `app server`, `app fetch`, etc
+
+[include:commands]
+
+#### Sharing parameters and values
+
+[include:commandvalues]
+
+#### Nested subcommands
+
+[include:commandnested]
+
+### Exception handling and error codes
+
+[include:exceptions]
+
+### Automatically generated `--help` messages
+
+TODO
+
+### Automatically generated bash completion, with dynamic completions
+
+TODO
+
+### Utilities
+
+In addition to command line *parsing*, clip has many features built-in which
+help you build *complete* terminal apps.
+
+#### Output formatting
+
+[include:utils-output]
+
+#### ANSI color support
+
+[include:utils-ansi]
+
+#### Reading input
+
+[include:utils-input]
+
+#### Launching applications
+
+[include:utils-launch]
+
+#### Progress bars
+
+[include:utils-progress]
+
+#### User directories
+
+[include:utils-userdirs]
+
+### Custom API traits
+
+[include:apitraits]
+
+## Acknowledgments
+
+Clip is inspired by a similarly-named Python project,
+[Click](https://click.palletsprojects.com/en/stable/). It borrows many of its
+concepts, particularly the CLI utilities.
+
+## Alternatives
+
+Clip is by no means the only library you can use to build CLI applications in
+Scala. As far as I know however, it is the only one which is offers a
+composable, declarative API, along with many additional utilities you'll likely
+need to build CLI app.
+
+Here are a few other options to check out:
+
+- [scopt](https://github.com/scopt/scopt) A very flexible command-line argument
+  parser.
+- [mainargs](https://github.com/com-lihaoyi/mainargs) Also a declarative
+  approach to building CLIs, based on annotations. Handles subcommand grouping
+  differently than clip, and I don't think it is designed for nestable
+  subcommands which can share data.
+- [scala-argparse](github.com/jodersky/scala-argparse) Library for building
+  command-line parsers, from the same author of this project. It can be thought
+  of as the predecessor to this project, and shares the command-line syntax
+  parser code. If you've used it, you'll notice the command-line grammar looks
+  very similar.
+
+## Changes
+
+- 0.1.0 2025-11-17
+
+  Initial release
