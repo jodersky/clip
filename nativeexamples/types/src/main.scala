@@ -1,4 +1,3 @@
-
 @clip.command()
 def main(
   num: Int = 0,

@@ -1,10 +1,3 @@
-// Clip supports reading many different types of parameters, including
-//
-// - primitive types (Int, String, Boolean, Double, etc.)
-// - paths (os.Path, java.nio.file.Path, java.io.File)
-// - tuples of key=value pairs
-// - times and durations (java.time types, and scala.concurrent.duration types)
-//
 // But what if you have a custom type that you want to read as a command line
 // parameter?
 //
@@ -51,4 +44,4 @@ run with --help for more information
 
 // If you find yourself needing to define readers for many custom types, in
 // various parts of your codebase, you may want to check out the section about
-// "API traits".
+// "[API traits](#custom-api-traits)".

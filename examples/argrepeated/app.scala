@@ -1,5 +1,5 @@
 // By default, parameters can only be specified once on the command line. If you
-// want parameters to be repeated multiple times, you can use the `repeats`
+// want parameters to be repeatable multiple times, you can use the `repeats`
 // option in the `@clip.arg` annotation.
 //
 // Repeated parameters must be of type `Iterable[T]`.

@@ -22,7 +22,10 @@ object ColorMode:
   val globalNoColor: Boolean =
     sys.env.get("NO_COLOR") match
       case Some(str) if str.nonEmpty => true
-      case _                         => false
+      case _                         =>
+        sys.env.get("TERM") match
+          case Some(term) if term == "dumb" => true
+          case _                            => false
 
   val globalForceColor: Boolean =
     sys.env.get("FORCE_COLOR") match

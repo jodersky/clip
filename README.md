@@ -100,7 +100,7 @@ on Linux and macOS, x86_64 and arm64.
 
 > [!NOTE] the examples shown here assume that the example code can be run as
 > `./app`. If you'd like to play along, you have two options:
-> 1. clone the repo, and run `./mill rexamples.<name of example>` instead of `./app`
+> 1. clone the repo, and run `./mill examples.<name of example>` instead of `./app`
 > 2. use scala-cli, `./scala <example file> --` instead of `./app`
 
 ### Annotation-based commands
@@ -255,7 +255,7 @@ such as `--color` and `--completion`. We'll get into these a bit later.
 #### Repeated parameters
 
 By default, parameters can only be specified once on the command line. If you
-want parameters to be repeated multiple times, you can use the `repeats`
+want parameters to be repeatable multiple times, you can use the `repeats`
 option in the `@clip.arg` annotation.
 
 Repeated parameters must be of type `Iterable[T]`.
@@ -307,6 +307,51 @@ Clip supports reading many different types of parameters, including
 - tuples of key=value pairs
 - times and durations (java.time types, and scala.concurrent.duration types)
 
+
+```scala
+@clip.command()
+def main(
+  num: Int = 0,
+  num2: Double = 0,
+  path: os.Path = os.pwd, // relative paths on the command line will be resolved to absolute paths w.r.t. to pwd
+  keyValue: (String, Int) = ("a" -> 2),
+  @clip.arg(name = "--key-values", repeats = true) keyValues: Seq[(String, Int)] = Seq(),
+  @clip.arg(name = "--key-values-map", repeats = true) keyValuesMap: Map[String, Int] = Map(),
+  duration: scala.concurrent.duration.Duration
+) =
+  println(s"num=$num")
+  println(s"num2=$num2")
+  println(s"path=$path")
+  println(s"keyValue=$keyValue")
+  println(s"keyValues=$keyValues")
+  println(s"keyValuesMap=$keyValuesMap")
+  println(s"duration=$duration")
+
+def main(args: Array[String]) = clip.main(this, args)
+```
+
+
+```
+$ ./app \
+  --num 42 \
+  --num2 3.14 \
+  --path /tmp \
+  --key-value a=1 \
+  --key-values b=2 \
+  --key-values c=3 \
+  --key-values-map d=4 \
+  --key-values-map e=5 \
+  --duration 5s
+num=42
+num2=3.14
+path=/tmp
+keyValue=(a,1)
+keyValues=List((b,2), (c,3))
+keyValuesMap=Map(d -> 4, e -> 5)
+duration=5 seconds
+```
+
+
 But what if you have a custom type that you want to read as a command line
 parameter?
 
@@ -356,7 +401,7 @@ run with --help for more information
 
 If you find yourself needing to define readers for many custom types, in
 various parts of your codebase, you may want to check out the section about
-"API traits".
+"[API traits](#custom-api-traits)".
 
 
 ### Subcommands `app server`, `app fetch`, etc
@@ -657,11 +702,11 @@ def app() =
 def main(args: Array[String]): Unit = clip.main(this, args)
 ```
 
-![output](rexamples/utils-ansi/out.png)
+![output](examples/utils-ansi/out.png)
 
 While convenient, `clip.style` may not be the most efficient if you have
 deeply nested styles. If it becomes a performance bottleneck, consider
-using dedicated library such as
+using a dedicated library such as
 [fansi](https://github.com/com-lihaoyi/fansi).
 
 
@@ -763,7 +808,7 @@ def app() =
 def main(args: Array[String]): Unit = clip.main(this, args)
 ```
 
-![progress bar](rexamples/utils-progress/progress.gif)
+![progress bar](examples/utils-progress/progress.gif)
 
 
 #### User directories
@@ -860,8 +905,6 @@ accept absolute paths (starting with a /).
 
 
 ```scala
-//> using dep io.crashbox::clip::0.1.0
-
 // this is the object that implements the API trait, you'd typically define this
 // once for your whole application
 object mycli extends clip.derivation.Api:
@@ -906,16 +949,14 @@ Clip is inspired by a similarly-named Python project,
 [Click](https://click.palletsprojects.com/en/stable/). It borrows many of its
 concepts, particularly the CLI utilities.
 
-## Alternatives
+## See also
 
-Clip is by no means the only library you can use to build CLI applications in
-Scala. As far as I know however, it is the only one which is offers a
-composable, declarative API, along with many additional utilities you'll likely
-need to build CLI app.
+Clip is by no means the only library you can use to build command line
+interfaces in Scala.
 
 Here are a few other options to check out:
 
-- [scopt](https://github.com/scopt/scopt) A very flexible command-line argument
+- [scopt](https://github.com/scopt/scopt) A flexible command-line argument
   parser.
 - [mainargs](https://github.com/com-lihaoyi/mainargs) Also a declarative
   approach to building CLIs, based on annotations. Handles subcommand grouping

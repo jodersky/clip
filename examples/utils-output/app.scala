@@ -36,6 +36,27 @@ Bob       25    Los Angeles
 Charlie   35    Chicago
 */
 
+// Clip's output utilities handle ANSI escape codes in a sane way. They are
+// stripped or kept based on the following rules:
+//
+// 1. check if the command line parameter `--color` is provided:
+//    - if `--color=always`, ANSI codes are always kept
+//    - if `--color=never`, ANSI codes are always stripped
+//    - if `--color=auto` or not provided, proceed to the next step
+//
+// 2. check the environment:
+//    - if FORCE_COLOR is set, ANSI codes are always kept
+//    - if NO_COLOR is set or TERM is dumb, ANSI codes are always stripped
+//    - if neither is set, proceed to the next step
+//
+// 3. check the output destination:
+//    - if output is a terminal, ANSI codes are kept
+//    - if output is a file or a pipe, ANSI codes are stripped
+//
+// Essentially, this means that unless you explicitly forbid or force colors via
+// the command line or environment variables, colors will be kept when printing
+// to a terminal, and stripped when redirecting output to a file or a pipe.
+
 /* usage snippet
 $ ./app --color=always
 Hello, World!

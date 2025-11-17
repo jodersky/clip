@@ -7,7 +7,7 @@ keyValues=List((a,1), (b,2))
 keyValuesMap=Map()
 
 $ app --num 1.1
-error invalid value for '--num': '1.1' is not an integral number
+invalid value for '--num': '1.1' is not an integral number
 run with --help for more information
 
 $ app --help

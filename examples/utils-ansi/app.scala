@@ -26,9 +26,9 @@ def app() =
 def main(args: Array[String]): Unit = clip.main(this, args)
 //snippet:end
 
-// ![output](rexamples/utils-ansi/out.png)
+// ![output](examples/utils-ansi/out.png)
 
 // While convenient, `clip.style` may not be the most efficient if you have
 // deeply nested styles. If it becomes a performance bottleneck, consider
-// using dedicated library such as
+// using a dedicated library such as
 // [fansi](https://github.com/com-lihaoyi/fansi).

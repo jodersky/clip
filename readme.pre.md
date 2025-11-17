@@ -44,7 +44,7 @@ on Linux and macOS, x86_64 and arm64.
 
 > [!NOTE] the examples shown here assume that the example code can be run as
 > `./app`. If you'd like to play along, you have two options:
-> 1. clone the repo, and run `./mill rexamples.<name of example>` instead of `./app`
+> 1. clone the repo, and run `./mill examples.<name of example>` instead of `./app`
 > 2. use scala-cli, `./scala <example file> --` instead of `./app`
 
 ### Annotation-based commands
@@ -62,6 +62,8 @@ on Linux and macOS, x86_64 and arm64.
 #### Parameter types
 
 [include:argtypes]
+
+[include:argtypes2]
 
 ### Subcommands `app server`, `app fetch`, etc
 
@@ -126,16 +128,14 @@ Clip is inspired by a similarly-named Python project,
 [Click](https://click.palletsprojects.com/en/stable/). It borrows many of its
 concepts, particularly the CLI utilities.
 
-## Alternatives
+## See also
 
-Clip is by no means the only library you can use to build CLI applications in
-Scala. As far as I know however, it is the only one which is offers a
-composable, declarative API, along with many additional utilities you'll likely
-need to build CLI app.
+Clip is by no means the only library you can use to build command line
+interfaces in Scala.
 
 Here are a few other options to check out:
 
-- [scopt](https://github.com/scopt/scopt) A very flexible command-line argument
+- [scopt](https://github.com/scopt/scopt) A flexible command-line argument
   parser.
 - [mainargs](https://github.com/com-lihaoyi/mainargs) Also a declarative
   approach to building CLIs, based on annotations. Handles subcommand grouping

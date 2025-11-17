@@ -18,8 +18,6 @@
 // accept absolute paths (starting with a /).
 //
 //snippet:start
-//> using dep io.crashbox::clip::0.1.0
-
 // this is the object that implements the API trait, you'd typically define this
 // once for your whole application
 object mycli extends clip.derivation.Api:

@@ -26,7 +26,7 @@ def app(
 def main(args: Array[String]): Unit = clip.main(this, args)
 
 
-// scala-cli --power package -o app --native rexamples/completion.scala --
+// scala-cli --power package -o app --native examples/completion.scala --
 // source
 // path
 

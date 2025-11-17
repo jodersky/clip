@@ -16,4 +16,4 @@ def app() =
 def main(args: Array[String]): Unit = clip.main(this, args)
 //snippet:end
 
-// ![progress bar](rexamples/utils-progress/progress.gif)
+// ![progress bar](examples/utils-progress/progress.gif)

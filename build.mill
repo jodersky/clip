@@ -70,7 +70,7 @@ object clip extends Module:
     def moduleDeps = Seq(readers.native)
     object test extends ScalaNativeTests with UtestModule
 
-object examples extends Module:
+object nativeexamples extends Module:
 
   object testutil extends ScalaNativeModule:
     def scalaNativeVersion = scalaNative
@@ -97,9 +97,9 @@ object examples extends Module:
     // def lto = mill.scalanativelib.api.LTO.Full
     def nativeLinkStubs = true
 
-    def nativeCompileOptions = Seq("-target", "aarch64-linux-musl")
-    def nativeLinkingOptions = Seq("-target", "aarch64-linux-musl")
-    //def nativeGC = "boehm"
+    // def nativeCompileOptions = Seq("-target", "aarch64-linux-musl")
+    // def nativeLinkingOptions = Seq("-target", "aarch64-linux-musl")
+    // def nativeGC = "boehm"
 
     object test extends ScalaNativeTests with UtestModule:
       def moduleDeps = super.moduleDeps ++ Seq(testutil)
@@ -114,7 +114,7 @@ object examples extends Module:
   object types extends ExampleApp
   object utils extends ExampleApp
 
-object rexamples extends Module:
+object examples extends Module:
   trait ExampleApp extends ScalaModule:
     def moduleDeps = Seq(clip.jvm)
     def scalaVersion = scala3
@@ -137,7 +137,7 @@ object rexamples extends Module:
 
         Task.log.info(s"Running test: ${invocation}")
 
-        val result = os.proc(invocation.split(" ")).call(
+        val result = os.proc(invocation.split("\\s+")).call(
           stdin = os.Inherit,
           stdout = os.Pipe,
           stderr = os.Pipe,
@@ -175,6 +175,7 @@ object rexamples extends Module:
   object argannots extends ExampleApp
   object argrepeated extends ExampleApp
   object argtypes extends ExampleApp
+  object argtypes2 extends ExampleApp
   object commands extends ExampleApp
   object commandvalues extends ExampleApp
   object commandnested extends ExampleApp:
@@ -198,6 +199,7 @@ object rexamples extends Module:
     argannots,
     argrepeated,
     argtypes,
+    argtypes2,
     commands,
     commandvalues,
     commandnested,
@@ -217,8 +219,8 @@ object rexamples extends Module:
 def readme() = Task.Command:
   val Include = """\[include:(.+)\]""".r
 
-  val allExamples = Task.sequence(rexamples.all.map(_.exampleFile))()
-  val snippetMap = rexamples.all.map(_.moduleDir.last).zip(allExamples).toMap
+  val allExamples = Task.sequence(examples.all.map(_.exampleFile))()
+  val snippetMap = examples.all.map(_.moduleDir.last).zip(allExamples).toMap
 
   val lines = os.read.lines(Task.ctx().workspace / "readme.pre.md")
   os.write.over(
@@ -287,13 +289,25 @@ object ExampleFile:
         val isSnippet = line.trim().startsWith("/* usage snippet")
         val startCol = line.indexOf("/* usage")
         readLine()
+
         if line == null then sys.error("expected at least one line after usage")
-        val invocation = line.drop(startCol)
+        var invocation = line.drop(startCol)
+        if invocation.endsWith("\\") then
+          invocation = invocation.dropRight(1)
+          readLine()
+          while line != null && line.endsWith("\\") do
+            invocation += " " + line.dropRight(1).trim()
+            readLine()
+          invocation += " " + line.trim()
+          readLine()
+        else
+          readLine()
+
         if isSnippet then
           markdown ++= "\n```\n"
           markdown ++= changeInvocation(invocation)
           markdown ++= "\n"
-        readLine()
+
         var expected = ""
         while line != null && !line.trim().startsWith("*/") do
           expected += line.drop(startCol)
