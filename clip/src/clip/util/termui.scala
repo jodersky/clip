@@ -129,22 +129,22 @@ object Color:
 
 // null == no change
 case class State(
-  fg: Color = null,
-  bg: Color = null,
-  bold: Boolean | Null = false,
-  dim: Boolean | Null = false,
-  underline: Boolean | Null = false,
-  overline: Boolean | Null = false,
-  italic: Boolean | Null = false,
-  blink: Boolean | Null = false,
-  reverse: Boolean | Null = false,
-  strikethrough: Boolean | Null = false
+    fg: Color = null,
+    bg: Color = null,
+    bold: Boolean | Null = false,
+    dim: Boolean | Null = false,
+    underline: Boolean | Null = false,
+    overline: Boolean | Null = false,
+    italic: Boolean | Null = false,
+    blink: Boolean | Null = false,
+    reverse: Boolean | Null = false,
+    strikethrough: Boolean | Null = false
 )
 
 trait Tag:
   def applyTo(
-    builder: StringBuilder,
-    state: State = State()
+      builder: StringBuilder,
+      state: State = State()
   ): Unit
   def render(): String =
     val builder = new StringBuilder
@@ -188,18 +188,18 @@ class Raw(s: String) extends Tag:
   override def toString(): String = render()
 
 class Styled(
-  fg: Color = null,
-  bg: Color = null,
-  bold: Boolean | Null = null,
-  dim: Boolean | Null = null,
-  underline: Boolean | Null = null,
-  overline: Boolean | Null = null,
-  italic: Boolean | Null = null,
-  blink: Boolean | Null = null,
-  reverse: Boolean | Null = null,
-  strikethrough: Boolean | Null = null,
-  reset: Boolean = true,
-  children: Seq[Tag] = Seq.empty
+    fg: Color = null,
+    bg: Color = null,
+    bold: Boolean | Null = null,
+    dim: Boolean | Null = null,
+    underline: Boolean | Null = null,
+    overline: Boolean | Null = null,
+    italic: Boolean | Null = null,
+    blink: Boolean | Null = null,
+    reverse: Boolean | Null = null,
+    strikethrough: Boolean | Null = null,
+    reset: Boolean = true,
+    children: Seq[Tag] = Seq.empty
 ) extends Tag:
   override def applyTo(builder: StringBuilder, state: State): Unit =
     for child <- children do
@@ -251,38 +251,38 @@ def style(
   reset,
   text
 )
-  // val buffer = new StringBuilder
+// val buffer = new StringBuilder
 
-  // if fg != null then buffer ++= fg.toAnsi(0)
-  // if bg != null then buffer ++= bg.toAnsi(10)
-  // if bold != null then
-  //   if bold.asInstanceOf[Boolean] then buffer ++= "\u001B[1m"
-  //   else buffer ++= "\u001B[22m"
-  // if dim != null then
-  //   if dim.asInstanceOf[Boolean] then buffer ++= "\u001B[2m"
-  //   else buffer ++= "\u001B[22m"
-  // if underline != null then
-  //   if underline.asInstanceOf[Boolean] then buffer ++= "\u001B[4m"
-  //   else buffer ++= "\u001B[24m"
-  // if overline != null then
-  //   if overline.asInstanceOf[Boolean] then buffer ++= "\u001B[53m"
-  //   else buffer ++= "\u001B[55m"
-  // if italic != null then
-  //   if italic.asInstanceOf[Boolean] then buffer ++= "\u001B[3m"
-  //   else buffer ++= "\u001B[23m"
-  // if blink != null then
-  //   if blink.asInstanceOf[Boolean] then buffer ++= "\u001B[5m"
-  //   else buffer ++= "\u001B[25m"
-  // if reverse != null then
-  //   if reverse.asInstanceOf[Boolean] then buffer ++= "\u001B[7m"
-  //   else buffer ++= "\u001B[27m"
-  // if strikethrough != null then
-  //   if strikethrough.asInstanceOf[Boolean] then buffer ++= "\u001B[9m"
-  //   else buffer ++= "\u001B[29m"
+// if fg != null then buffer ++= fg.toAnsi(0)
+// if bg != null then buffer ++= bg.toAnsi(10)
+// if bold != null then
+//   if bold.asInstanceOf[Boolean] then buffer ++= "\u001B[1m"
+//   else buffer ++= "\u001B[22m"
+// if dim != null then
+//   if dim.asInstanceOf[Boolean] then buffer ++= "\u001B[2m"
+//   else buffer ++= "\u001B[22m"
+// if underline != null then
+//   if underline.asInstanceOf[Boolean] then buffer ++= "\u001B[4m"
+//   else buffer ++= "\u001B[24m"
+// if overline != null then
+//   if overline.asInstanceOf[Boolean] then buffer ++= "\u001B[53m"
+//   else buffer ++= "\u001B[55m"
+// if italic != null then
+//   if italic.asInstanceOf[Boolean] then buffer ++= "\u001B[3m"
+//   else buffer ++= "\u001B[23m"
+// if blink != null then
+//   if blink.asInstanceOf[Boolean] then buffer ++= "\u001B[5m"
+//   else buffer ++= "\u001B[25m"
+// if reverse != null then
+//   if reverse.asInstanceOf[Boolean] then buffer ++= "\u001B[7m"
+//   else buffer ++= "\u001B[27m"
+// if strikethrough != null then
+//   if strikethrough.asInstanceOf[Boolean] then buffer ++= "\u001B[9m"
+//   else buffer ++= "\u001B[29m"
 
-  // buffer ++= text
-  // if reset then buffer ++= ResetAll
-  // buffer.result()
+// buffer ++= text
+// if reset then buffer ++= ResetAll
+// buffer.result()
 
 def pause(message: String = "Press Enter to continue..."): Unit =
   if clip.util.term.isatty(System.in) then
@@ -424,10 +424,10 @@ class progressbar(
           f(istream)
 
 def tabulate(
-  headers: Iterable[String],
-  lines: Iterable[Iterable[String]],
-  sep: String = "   ",
-  out: java.io.PrintStream = System.out
+    headers: Iterable[String],
+    lines: Iterable[Iterable[String]],
+    sep: String = "   ",
+    out: java.io.PrintStream = System.out
 ): Unit =
   val allLines = headers +: lines.toSeq
 
@@ -441,11 +441,10 @@ def tabulate(
       colWidths(i) = math.max(colWidths(i), col.length)
 
   def formatLine(line: Iterable[String]): String =
-    line.zipWithIndex.map: (col, i) =>
-      String.format(s"%-${colWidths(i)}s", col)
-    .mkString(sep)
+    line.zipWithIndex
+      .map: (col, i) =>
+        String.format(s"%-${colWidths(i)}s", col)
+      .mkString(sep)
 
   out.println(formatLine(headers))
-  for line <- lines do
-    out.println(formatLine(line))
-
+  for line <- lines do out.println(formatLine(line))

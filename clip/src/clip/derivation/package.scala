@@ -257,12 +257,17 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
     InvocationResult.Success(builder.result())
 
   /** Eager parameters to add to each command
-    * @param root Whether this is the root command
-    * @param version If a version string was provided for the command
+    * @param root
+    *   Whether this is the root command
+    * @param version
+    *   If a version string was provided for the command
     * @return
     *   A sequence of eager parameters to add to the command
     */
-  def eagerParams(root: Boolean, version: Option[String]): Seq[clip.dispatch.EagerParam] =
+  def eagerParams(
+      root: Boolean,
+      version: Option[String]
+  ): Seq[clip.dispatch.EagerParam] =
     val params = collection.mutable.ListBuffer.empty[clip.dispatch.EagerParam]
     params += clip.dispatch.StandardEagerParams.help()
 

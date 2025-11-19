@@ -329,11 +329,13 @@ def generateCompletionRecursively(
             completer = p.completer,
             help = p.help
           ),
-        subcommands = current.listChildren().map: s =>
-          c.SubcommandInfo(
-            name = s.name,
-            help = s.help
-          )
+        subcommands = current
+          .listChildren()
+          .map: s =>
+            c.SubcommandInfo(
+              name = s.name,
+              help = s.help
+            )
       )
     )
   end while

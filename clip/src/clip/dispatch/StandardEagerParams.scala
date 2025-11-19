@@ -55,12 +55,9 @@ object StandardEagerParams:
         val (shell, aliases) = shellArg match
           case Some(s) =>
             val parts = s.split(",", -1)
-            if parts.length == 0 then
-              ("bash", Seq(chain.head.name))
-            else if parts.length == 1 then
-              (parts.head, Seq(chain.head.name))
-            else
-              (parts.head, parts.tail.toSeq)
+            if parts.length == 0 then ("bash", Seq(chain.head.name))
+            else if parts.length == 1 then (parts.head, Seq(chain.head.name))
+            else (parts.head, parts.tail.toSeq)
           case None => ("bash", Seq(chain.head.name))
 
         shell match

@@ -318,34 +318,31 @@ object BashCompletion:
         |""".stripMargin
 
   def specs(
-    chain: Seq[String],
-    params: Seq[ParamInfo],
-    subcommands: Seq[SubcommandInfo]
+      chain: Seq[String],
+      params: Seq[ParamInfo],
+      subcommands: Seq[SubcommandInfo]
   ): String =
     val b = new StringBuilder
-    for cmd <- chain do
-      b ++= s"_$cmd"
+    for cmd <- chain do b ++= s"_$cmd"
     b ++= "() {\n"
 
     var ppos = 0
     for param <- params do
       val completerStr =
-        if param.isFlag then
-          "flag"
+        if param.isFlag then "flag"
         else
           param.completer match
-            case Completer.Empty       => "none"
-            case Completer.Default     => "default"
+            case Completer.Empty        => "none"
+            case Completer.Default      => "default"
             case Completer.OneOf(words) => s"oneof(${words.mkString(",")})"
-            case Completer.Dynamic(_)  => "dynamic"
+            case Completer.Dynamic(_)   => "dynamic"
 
       if param.isNamed then
         for name <- param.names do
           b ++= s"""  named+=("$name:$completerStr:${param.help}")\n"""
       else
         b ++= s"""  positional+=("$completerStr")\n"""
-        if param.repeats then
-          b ++= s"""  repeat_pos=$ppos\n"""
+        if param.repeats then b ++= s"""  repeat_pos=$ppos\n"""
         ppos += 1
     end for
 

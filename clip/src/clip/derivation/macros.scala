@@ -180,8 +180,8 @@ private class macros(using val qctx: Quotes):
           // TODO: don't use clip.derivation.default here, but instead use the
           // API trait pattern
           val eagers = clip.derivation.default.eagerParams(
-            ${Expr(root)},
-            Option(${info.version})
+            ${ Expr(root) },
+            Option(${ info.version })
           ) ++ ${ info.eagers }
 
           Command[ctxType, resType](
