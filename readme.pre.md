@@ -159,7 +159,7 @@ Clip is inspired by a similarly-named Python project,
 [Click](https://click.palletsprojects.com/en/stable/). It borrows many of its
 concepts, particularly the CLI utilities.
 
-The shell-completion helpers for formatting completers and debugging are copied
+The shell-completion helpers for formatting completions and debugging are copied
 from kubectl and docker.
 
 ## See also
