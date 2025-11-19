@@ -52,14 +52,26 @@ object StandardEagerParams:
       val completionArgs = args("--completion")
       if completionArgs.nonEmpty then
         val shellArg = completionArgs.headOption.flatMap(_.value)
-        shellArg match
-          case Some("bash") | None =>
+        val (shell, aliases) = shellArg match
+          case Some(s) =>
+            val parts = s.split(",", -1)
+            if parts.length == 0 then
+              ("bash", Seq(chain.head.name))
+            else if parts.length == 1 then
+              (parts.head, Seq(chain.head.name))
+            else
+              (parts.head, parts.tail.toSeq)
+          case None => ("bash", Seq(chain.head.name))
+
+        shell match
+          case "bash" =>
             clip.dispatch.generateCompletionRecursively(
+              aliases,
               System.out,
               chain.last
             )
             EagerResult.Return(InvocationResult.Success(()))
-          case Some(other) =>
+          case other =>
             System.err.println(s"unsupported shell for completion: '$other'")
             EagerResult.Return(
               InvocationResult.ParamError(invalid =
@@ -74,7 +86,8 @@ object StandardEagerParams:
       names = Seq("--color"),
       help = "Set color mode (auto, always, never)",
       argName = Some("mode"),
-      repeats = false
+      repeats = false,
+      completer = clip.Completer.OneOf(Seq("auto", "always", "never"))
     ),
     (chain, ctx, args) =>
       val colorArgs = args("--color")

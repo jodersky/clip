@@ -5,7 +5,7 @@ enum Completer:
   case Empty
 
   /** Completion picked from a fixed set of words */
-  case Fixed(alternatives: Set[String])
+  case OneOf(alternatives: Iterable[String])
 
   /** Default bash completion (uses paths) */
   case Default
@@ -15,4 +15,4 @@ enum Completer:
     *   Function that takes the current (partial) input and returns a sequence
     *   of possible completions.
     */
-  case Dynamic[A](complete: (A, String) => Set[String])
+  case Dynamic[A](complete: (A, String) => Iterable[String])

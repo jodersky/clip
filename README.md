@@ -785,7 +785,7 @@ def app(set: Int = 1) =
     clip.abort(message = "unknown set: " + set)
 
 @clip.command()
-def subcmd(
+def subcmd1(
   @clip.context ctx: Context,
   @clip.arg("--item", completer = clip.Completer.Dynamic(
     (ctx, partial) =>
@@ -794,16 +794,27 @@ def subcmd(
 ) =
   clip.echo(s"Selected item: $item")
 
+@clip.command()
+def subcmd2(
+  @clip.arg("head", completer = clip.Completer.OneOf(Seq("alpha", "beta", "gamma")))
+  head: String,
+  @clip.arg("tail", completer = clip.Completer.OneOf(Seq("delta", "epsilon")), repeats = true)
+  tail: Seq[String],
+  @clip.arg("--named", completer = clip.Completer.OneOf(Seq("one", "two", "three")))
+  named: String
+) =
+  clip.echo("Subcommand 2")
+
 def main(args: Array[String]): Unit = clip.main(this, args)
 ```
 
 ```
-$ ./app --set 1 subcmd --item b<TAB>
+$ ./app --set 1 subcmd1 --item b<TAB>
 bar  baz
 ```
 
 ```
-$ ./app --set 2 subcmd --item b<TAB>
+$ ./app --set 2 subcmd1 --item b<TAB>
 banana  blueberry
 ```
 

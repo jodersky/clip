@@ -299,59 +299,43 @@ def help2(
   * recursively.
   */
 def generateCompletionRecursively(
+    names: Seq[String],
     out: java.io.PrintStream,
     cmd: Command[?, ?]
 ): Unit =
-  val visited = scala.collection.mutable.Set.empty[Command[?, ?]]
-  val sorted =
-    scala.collection.mutable.ListBuffer.empty[(Seq[String], Command[?, ?])]
-  val stack = scala.collection.mutable.Stack.empty[(Seq[String], Command[?, ?])]
+  import scala.collection.mutable as m
+  import clip.completion as c
 
+  val stack = m.Stack.empty[(Seq[String], Command[?, ?])]
   stack.push(Seq(cmd.name) -> cmd)
+
+  out.println(c.BashCompletion.doc(cmd.name))
+  out.println(c.BashCompletion.utils(cmd.name))
 
   while stack.nonEmpty do
     val (chain, current) = stack.pop()
 
-    if !visited.contains(current) then
-      visited += current
-      sorted += (chain -> current)
+    for child <- current.listChildren() do
+      stack.push((chain :+ child.name) -> child)
 
-      for child <- current.listChildren() do
-        stack.push((chain :+ child.name) -> child)
-
-  clip.completion.StandaloneBashCompletion.printHeader(out)
-  clip.completion.StandaloneBashCompletion.printUtils(out, cmd.name)
-
-  for (chain, command) <- sorted.reverse do
-    generateCompletionSingle(out, chain, command)
-
-/** Completion for a single command, not including any child commands.
-  *
-  * This generates a bash completion script that assumes it is called withing
-  * the framework of clip.completion
-  */
-def generateCompletionSingle(
-    out: java.io.PrintStream,
-    chain: Seq[String],
-    cmd: Command[?, ?]
-): Unit =
-  // synthesize a positional parameter representing the subcommand
-  val subcmd = clip.completion.ParamInfo(
-    names = Seq("command"),
-    isFlag = false,
-    repeats = false,
-    completer = clip.completion.Completer.Fixed(
-      cmd.listChildren().map(_.name).toSet
+    out.println(
+      c.BashCompletion.specs(
+        chain = chain,
+        params = current.params.map: p =>
+          c.ParamInfo(
+            names = p.names,
+            isFlag = p.isFlag,
+            repeats = p.repeats,
+            completer = p.completer,
+            help = p.help
+          ),
+        subcommands = current.listChildren().map: s =>
+          c.SubcommandInfo(
+            name = s.name,
+            help = s.help
+          )
+      )
     )
-  )
-  clip.completion.StandaloneBashCompletion.printCommandCompletion(
-    chain,
-    Seq(subcmd) ++ cmd.params.map: p =>
-      clip.completion.ParamInfo(
-        names = p.names,
-        isFlag = p.isFlag,
-        repeats = p.repeats,
-        completer = p.completer
-      ),
-    out
-  )
+  end while
+
+  out.println(c.BashCompletion.hook(cmd.name, names))

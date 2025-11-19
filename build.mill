@@ -330,3 +330,21 @@ object ExampleFile:
       else
         readLine()
     ExampleFile(markdown.toString, usageTests.toSeq)
+
+object comptest extends ScalaModule:
+  def scalaVersion = scala3
+
+  object test extends ScalaTests with UtestModule:
+    def mvnDeps = super.mvnDeps() ++ Seq(thirdparty.oslib)
+    def assemblies = Task:
+      Seq(
+        examples.completion1.assembly(),
+        examples.completion2.assembly()
+      )
+
+    override protected def testTask(
+      args: Task[Seq[String]],
+      globSelectors: Task[Seq[String]]
+    ) = Task.Anon:
+      assemblies()
+      super.testTask(args, globSelectors)()

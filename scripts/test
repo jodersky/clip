@@ -5,4 +5,12 @@ set -o errexit
 ./mill readme
 
 # run tests
-./mill __.test
+
+# comptest tests are time-sensitive and may fail under heavy load, so we run
+# tests separately
+# TODO: instead of enumerating all tests, find a way to all except comptest
+./mill readers.__.test
+./mill clip.__.test
+./mill nativeexamples.__.test
+./mill examples.__.test
+./mill comptest.__.test
