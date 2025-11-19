@@ -159,6 +159,9 @@ Clip is inspired by a similarly-named Python project,
 [Click](https://click.palletsprojects.com/en/stable/). It borrows many of its
 concepts, particularly the CLI utilities.
 
+The shell-completion helpers for formatting completers and debugging are copied
+from kubectl and docker.
+
 ## See also
 
 Clip is by no means the only library you can use to build command line
@@ -180,6 +183,6 @@ Here are a few other options to check out:
 
 ## Changes
 
-- 0.1.0 2025-11-17
+- 0.1.0 2025-11-19
 
   Initial release
