@@ -2,7 +2,7 @@
 
 import mill._, scalalib._, scalajslib._, scalanativelib._, scalafmt._, publish._
 
-val scala3 = "3.7.4"
+val scala3 = "3.8.2"
 val scalaNative = "0.5.9"
 
 object thirdparty:
