@@ -183,6 +183,10 @@ Here are a few other options to check out:
 
 ## Changes
 
+- 0.1.1 2026-03-26
+
+  Bump Scala version to avoid "sun.misc.Unsafe" deprecation warnings in newer JDKs.
+
 - 0.1.0 2025-11-19
 
   Initial release
