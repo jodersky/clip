@@ -667,7 +667,7 @@ You can specify an exit code and a message to be printed.
 @clip.command()
 def app(x: Int) =
   if x % 2 != 0 then
-    clip.abort(100, "x must be even")
+    clip.abort("x must be even", 100)
 
   clip.echo(s"x is $x")
 
@@ -974,7 +974,7 @@ def app() =
     clip.echo(s"Your password is ${password}")
   else
     clip.echo("Operation cancelled.")
-    clip.abort(2)
+    clip.abort(code = 2)
 
 def main(args: Array[String]): Unit = clip.main(this, args)
 ```

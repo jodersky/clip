@@ -8,7 +8,7 @@
 @clip.command()
 def app(x: Int) =
   if x % 2 != 0 then
-    clip.abort(100, "x must be even")
+    clip.abort("x must be even", 100)
 
   clip.echo(s"x is $x")
 

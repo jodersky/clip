@@ -334,7 +334,7 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
 
         if (input == null || input.isEmpty) && default != null then
           return default.asInstanceOf[A]
-        else if input == null then clip.util.abort(2, "No input provided")
+        else if input == null then clip.util.abort("No input provided", 2)
 
         reader.read(input) match
           case ReadResult.Error(msg) =>
@@ -348,8 +348,8 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
       return default.asInstanceOf[A]
     else
       clip.util.abort(
-        2,
-        "Cannot prompt for input in non-interactive terminal (no default provided)"
+        "Cannot prompt for input in non-interactive terminal (no default provided)",
+        2
       )
 
   def confirm(

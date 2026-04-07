@@ -86,7 +86,7 @@ def invoke(
         stderr.println(s"similar commands:")
         for cmd <- similar do stderr.println(s"  $cmd")
       2
-    case InvocationResult.Exception(clip.util.AbortException(code, message)) =>
+    case InvocationResult.Exception(clip.util.AbortException(message, code)) =>
       stderr.println(message)
       stderr.println("Aborted")
       code

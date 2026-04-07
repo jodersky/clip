@@ -1,14 +1,14 @@
 package clip.util
 
-case class AbortException(code: Int, message: String) extends Exception(message)
+case class AbortException(message: String, code: Int) extends Exception(message)
 
 /** Exit the program with an error code.
   *
   * This throws a special exception that is caught by the clip main invoker to
   * exit the program with the given code.
   */
-def abort(code: Int = 1, message: String = ""): Nothing =
-  throw AbortException(code, message)
+def abort(message: String = "", code: Int = 1): Nothing =
+  throw AbortException(message, code)
 
 trait Output:
   def stream(s: java.io.OutputStream => Unit): Unit
