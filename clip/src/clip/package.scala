@@ -9,6 +9,7 @@ export clip.util.termui.Color.Rgb
 export clip.util.termui.ColorMode
 export clip.util.termui.echo
 export clip.util.termui.launch
+export clip.util.termui.log
 export clip.util.termui.pause
 export clip.util.termui.progressbar
 export clip.util.termui.ResetAll

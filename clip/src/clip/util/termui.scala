@@ -85,6 +85,18 @@ def echo(
   else if nl then System.out.println(finalMessage)
   else System.out.print(finalMessage)
 
+/** Print a message to stderr.
+  *
+  * @see
+  *   echo()
+  */
+def log(
+    message: Any,
+    nl: Boolean = true,
+    colorMode: ColorMode = ColorMode.Auto
+): Unit =
+  echo(message = message, err = true, nl = nl, colorMode = colorMode)
+
 val ResetAll = "\u001B[0m"
 
 enum AnsiColor(val n: Int):

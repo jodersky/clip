@@ -22,6 +22,9 @@ def app() =
     )
   )
 
+  // use `clip.log` to print diagnostic information to stderr
+  clip.log("This is a log message that goes to stderr.")
+
 def main(args: Array[String]): Unit = clip.main(this, args)
 //snippet:end
 //
@@ -34,6 +37,7 @@ Name      Age   City
 Alice     30    New York
 Bob       25    Los Angeles
 Charlie   35    Chicago
+This is a log message that goes to stderr.
 */
 
 // Clip's output utilities handle ANSI escape codes in a sane way. They are
@@ -65,4 +69,5 @@ Name      Age   City
 Alice     30    New York
 Bob       25    Los Angeles
 Charlie   35    Chicago
+This is a log message that goes to stderr.
 */
