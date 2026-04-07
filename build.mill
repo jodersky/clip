@@ -18,7 +18,7 @@ trait UtestModule extends ScalaModule with TestModule:
   def mvnDeps = Seq(thirdparty.utest)
 
 trait Publish extends PublishModule:
-  def publishVersion = "0.1.1"
+  def publishVersion = "0.2.0"
   def pomSettings = PomSettings(
     description = "A Scala library for building command line interfaces",
     organization = "io.crashbox",

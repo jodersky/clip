@@ -851,6 +851,9 @@ def app() =
     )
   )
 
+  // use `clip.log` to print diagnostic information to stderr
+  clip.log("This is a log message that goes to stderr.")
+
 def main(args: Array[String]): Unit = clip.main(this, args)
 ```
 
@@ -864,6 +867,7 @@ Name      Age   City
 Alice     30    New York
 Bob       25    Los Angeles
 Charlie   35    Chicago
+This is a log message that goes to stderr.
 ```
 
 Clip's output utilities handle ANSI escape codes in a sane way. They are
@@ -896,6 +900,7 @@ Name      Age   City
 Alice     30    New York
 Bob       25    Los Angeles
 Charlie   35    Chicago
+This is a log message that goes to stderr.
 ```
 
 
@@ -1228,6 +1233,12 @@ Here are a few other options to check out:
   similar.
 
 ## Changes
+
+- 0.2.0 2026-04-07
+
+  - add `clip.log()`, `clip.Input`, and `clip.Output`
+  - flip parameters of `clip.abort()`, they are now defined as `clip.abort(message, code)`
+  - fix: don't empit empty newline when reading password
 
 - 0.1.1 2026-03-26
 

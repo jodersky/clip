@@ -183,6 +183,12 @@ Here are a few other options to check out:
 
 ## Changes
 
+- 0.2.0 2026-04-07
+
+  - add `clip.log()`, `clip.Input`, and `clip.Output`
+  - flip parameters of `clip.abort()`, they are now defined as `clip.abort(message, code)`
+  - fix: don't empit empty newline when reading password
+
 - 0.1.1 2026-03-26
 
   Bump Scala version to avoid "sun.misc.Unsafe" deprecation warnings in newer JDKs.
