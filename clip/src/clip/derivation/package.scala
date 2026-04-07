@@ -161,6 +161,34 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
         case Right(value) => ReadResult.Success(value)
     def typeName: String = fs.typeName
 
+  given outputReader(using pr: Reader[os.Path]): Reader[clip.util.Output] with
+    def read(str: String): ReadResult[clip.util.Output] =
+      str match
+        case "-" =>
+          ReadResult.Success(clip.util.Output.Stdout)
+        case path =>
+          pr.read(path) match
+            case ReadResult.Error(err) =>
+              ReadResult.Error(err)
+            case ReadResult.Success(path) =>
+              ReadResult.Success(clip.util.Output.File(path))
+
+    def typeName: String = "file path or - for stdout"
+
+  given inputReader(using pr: Reader[os.Path]): Reader[clip.util.Input] with
+    def read(str: String): ReadResult[clip.util.Input] =
+      str match
+        case "-" =>
+          ReadResult.Success(clip.util.Input.Stdin)
+        case path =>
+          pr.read(path) match
+            case ReadResult.Error(err) =>
+              ReadResult.Error(err)
+            case ReadResult.Success(path) =>
+              ReadResult.Success(clip.util.Input.File(path))
+
+    def typeName: String = "file path or - for stdin"
+
   /** Annotate a parameter with @arg to indicate that its value should be
     * provided by a command-line argument.
     *

@@ -15,6 +15,8 @@ export clip.util.termui.ResetAll
 export clip.util.termui.style
 export clip.util.termui.tabulate
 export clip.util.userdirs
+export clip.util.Input
+export clip.util.Output
 
 // command derivation
 export clip.derivation.command
