@@ -325,9 +325,7 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
 
         val input = if password then
           clip.util.termui.echo(msg + " (input hidden): ", nl = false)
-          val r = clip.util.term.readHidden()
-          clip.util.termui.echo("") // newline after hidden input
-          r
+          clip.util.term.readHidden()
         else
           clip.util.termui.echo(msg + ": ", nl = false)
           scala.io.StdIn.readLine()
