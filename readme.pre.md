@@ -183,6 +183,10 @@ Here are a few other options to check out:
 
 ## Changes
 
+- 0.2.1 2026-04-11
+
+  Add reachability metadata for native images
+
 - 0.2.0 2026-04-07
 
   - add `clip.log()`, `clip.Input`, and `clip.Output`
