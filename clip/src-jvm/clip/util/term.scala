@@ -51,7 +51,11 @@ def size(): Option[(Int, Int)] =
     foreign.ValueLayout.JAVA_LONG, // op
     foreign.ValueLayout.ADDRESS // pointer to winsize struct
   )
-  val ioctl = linker.downcallHandle(ioctlAddr, ioctlSig)
+  val ioctl = linker.downcallHandle(
+    ioctlAddr,
+    ioctlSig,
+    foreign.Linker.Option.firstVariadicArg(2)
+  )
 
   val winsizeStruct = foreign.MemoryLayout.structLayout(
     foreign.ValueLayout.JAVA_SHORT.withName("rows"),
