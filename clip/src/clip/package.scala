@@ -18,6 +18,8 @@ export clip.util.termui.tabulate
 export clip.util.userdirs
 export clip.util.Input
 export clip.util.Output
+export clip.util.progress.MultiStatus
+export clip.util.progress.StatusHandle
 
 // command derivation
 export clip.derivation.command

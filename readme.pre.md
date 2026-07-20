@@ -117,6 +117,8 @@ help you build *complete* terminal apps.
 
 [include:utils-progress]
 
+[include:utils-multistatus]
+
 #### User directories
 
 [include:utils-userdirs]

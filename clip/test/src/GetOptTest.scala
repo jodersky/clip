@@ -141,7 +141,7 @@ object GetOptTest extends TestSuite:
         assert(result.grouped(p2.name).isEmpty)
         val (unknown, remainder) = result.remainder.get
         assert(unknown == "--p3")
-        assert(remainder.next == "--p2")
+        assert(remainder.next() == "--p2")
         assert(!remainder.hasNext)
 
       test("too many out of order with pos"):
@@ -150,8 +150,8 @@ object GetOptTest extends TestSuite:
         assert(result.grouped(p2.name) == Seq(Arg("--p2", None)))
         val (unknown, remainder) = result.remainder.get
         assert(unknown == "--p3")
-        assert(remainder.next == "p0")
-        assert(remainder.next == "--p2")
+        assert(remainder.next() == "p0")
+        assert(remainder.next() == "--p2")
         assert(!remainder.hasNext)
 
       test("with arg"):
@@ -199,7 +199,7 @@ object GetOptTest extends TestSuite:
         assert(result.grouped(p2.name).isEmpty)
         val (unknown, remainder) = result.remainder.get
         assert(unknown == "--p3")
-        assert(remainder.next == "--p2")
+        assert(remainder.next() == "--p2")
         assert(!remainder.hasNext)
 
       test("too many out of order with pos"):
@@ -208,8 +208,8 @@ object GetOptTest extends TestSuite:
         assert(result.grouped(p2.name) == Seq(Arg("--p2", None)))
         val (unknown, remainder) = result.remainder.get
         assert(unknown == "--p3")
-        assert(remainder.next == "p0")
-        assert(remainder.next == "--p2")
+        assert(remainder.next() == "p0")
+        assert(remainder.next() == "--p2")
         assert(!remainder.hasNext)
 
       test("with arg"):
@@ -218,8 +218,8 @@ object GetOptTest extends TestSuite:
         assert(result.grouped(p2.name).isEmpty)
         val (unknown, remainder) = result.remainder.get
         assert(unknown == "p0")
-        assert(remainder.next == "--p2=--p3")
-        assert(remainder.next == "extra")
+        assert(remainder.next() == "--p2=--p3")
+        assert(remainder.next() == "extra")
         assert(!remainder.hasNext)
 
       test("with arg override"):

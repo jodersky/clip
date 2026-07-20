@@ -123,7 +123,7 @@ def readHidden(): String = Zone:
     val newt = alloc[termios.termios]()
     if termios.tcgetattr(0, prevt) != 0 || termios.tcgetattr(0, newt) != 0 then
       sys.error("tcgetattr failed")
-    newt._4 = newt._4 & ~termios.ECHO
+    newt._4 = newt._4 & ~termios.ECHO.toUInt
     if termios.tcsetattr(0, termios.TCSANOW, newt) != 0 then
       sys.error("tcsetattr failed")
     try

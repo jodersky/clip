@@ -1,12 +1,12 @@
-//| mill-version: 1.0.6
+//| mill-version: 1.1.7
 
 import mill._, scalalib._, scalajslib._, scalanativelib._, scalafmt._, publish._
 
-val scala3 = "3.8.2"
-val scalaNative = "0.5.9"
+val scala3 = "3.8.4"
+val scalaNative = "0.5.12"
 
 object thirdparty:
-  val oslib = mvn"com.lihaoyi::os-lib::0.11.6"
+  val oslib = mvn"com.lihaoyi::os-lib::0.11.8"
   val utest = mvn"com.lihaoyi::utest::0.9.1"
   //val time = mvn"org.ekrich::sjavatime::1.4.0"
   val time = mvn"io.github.cquiroz::scala-java-time::2.6.0"
@@ -18,7 +18,7 @@ trait UtestModule extends ScalaModule with TestModule:
   def mvnDeps = Seq(thirdparty.utest)
 
 trait Publish extends PublishModule:
-  def publishVersion = "0.2.1"
+  def publishVersion = "0.2.2-SNAPSHOT"
   def pomSettings = PomSettings(
     description = "A Scala library for building command line interfaces",
     organization = "io.crashbox",
@@ -121,10 +121,6 @@ object examples extends Module:
     def sources = Task.Sources(moduleDir)
     def exampleSource = Task.Source(moduleDir / "app.scala")
 
-    // TODO: for some reason, mill doesn't find the main class if it's defined
-    // in the root package (i.e. no package), and not in an object
-    def mainClass = Some("'app$package'")
-
     def exampleFile = Task:
       ExampleFile.fromFile(
         exampleSource().path
@@ -191,6 +187,7 @@ object examples extends Module:
   object `utils-input` extends ExampleApp
   object `utils-launch` extends ExampleApp
   object `utils-progress` extends ExampleApp
+  object `utils-multistatus` extends ExampleApp
   object `utils-userdirs` extends ExampleApp
   object `utils-termutils` extends ExampleApp
 
@@ -214,6 +211,7 @@ object examples extends Module:
     `utils-input`,
     `utils-launch`,
     `utils-progress`,
+    `utils-multistatus`,
     `utils-userdirs`,
     `utils-termutils`
   )
