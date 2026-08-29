@@ -187,6 +187,11 @@ Here are a few other options to check out:
 
 ## Changes
 
+- 0.2.3 2026-08-29
+
+  Add scroll-region based progress bars, which support arbitrary writes to
+  output while still displaying progress bars.
+
 - 0.2.2 2026-07-20
 
   - Upgrade Mill and Scala versions
