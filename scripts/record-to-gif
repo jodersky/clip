@@ -1,0 +1,10 @@
+#!/bin/bash
+set -o errexit
+set -o nounset
+
+dest="$1"
+cast_file=$(mktemp)
+trap 'rm -f "$cast_file"' EXIT
+
+asciinema rec --cols 80 --rows 25 "$cast_file"
+agg "$cast_file" "$dest"

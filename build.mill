@@ -188,6 +188,7 @@ object examples extends Module:
   object `utils-launch` extends ExampleApp
   object `utils-progress` extends ExampleApp
   object `utils-multistatus` extends ExampleApp
+  object `utils-multistatus-scroll` extends ExampleApp
   object `utils-userdirs` extends ExampleApp
   object `utils-termutils` extends ExampleApp
 
@@ -212,6 +213,7 @@ object examples extends Module:
     `utils-launch`,
     `utils-progress`,
     `utils-multistatus`,
+    `utils-multistatus-scroll`,
     `utils-userdirs`,
     `utils-termutils`
   )

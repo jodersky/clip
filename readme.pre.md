@@ -119,6 +119,8 @@ help you build *complete* terminal apps.
 
 [include:utils-multistatus]
 
+[include:utils-multistatus-scroll]
+
 #### User directories
 
 [include:utils-userdirs]
