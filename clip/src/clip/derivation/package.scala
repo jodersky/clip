@@ -136,7 +136,8 @@ private def mainImpl(using
     case '{ $cmd: Command[Unit, ?] } =>
       '{
         val code = clip.dispatch.invoke($cmd, $argsExpr.toSeq)
-        sys.exit(code)
+        if code != 0 then
+          sys.exit(code)
       }
     case _ =>
       report.errorAndAbort(
