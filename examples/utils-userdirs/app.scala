@@ -9,8 +9,12 @@ def app() =
   // It is a good idea to use this utility class to ensure that your application
   // respects the user's preferences for where to store files.
   //
-  // As of now it uses the XDG Base Directory Specification to determine the
-  // appropriate directories, and it is currently only implemented for Linux.
+  // On Linux, it uses the XDG Base Directory Specification to determine the
+  // appropriate directories. On macOS, it uses `~/Library/Application Support`
+  // and `~/Library/Caches`, and on Windows `%APPDATA%` and `%LOCALAPPDATA%`.
+  // Explicitly set XDG environment variables are honored on all platforms.
+  //
+  // The defaults listed below are for Linux.
   //
 
   // A directory where the application can store its configuration files.
