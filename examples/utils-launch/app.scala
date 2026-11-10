@@ -14,7 +14,7 @@ def app() =
   clip.launch("README.md")
   //snippet:end
 
-  // As of now, `clip.launch` only works on Linux, on systems which support the
-  // xdg-open command.
+  // On Linux, `clip.launch` uses the `xdg-open` command, on macOS the `open`
+  // command, and on Windows the shell's default handler for the URL or file.
 
 def main(args: Array[String]): Unit = clip.main(this, args)

@@ -303,15 +303,30 @@ def pause(message: String = "Press Enter to continue..."): Unit =
 
 /** Launches the given URL in the user's preferred application.
   *
+  * This uses `xdg-open` on Linux, `open` on macOS, and the shell's URL
+  * protocol handler on Windows.
+  *
   * @param url
   *   the URL to launch (can also be a file path)
   * @return
   *   the exit code of the launched process, or 127 if launching failed
-  *
-  * // TODO: support non-linux platforms
   */
 def launch(url: String): Int =
-  try os.proc("xdg-open", url).call(check = false).exitCode
+  import clip.util.userdirs.Platform
+  val cmd: Seq[String] = Platform.current match
+    case Platform.Linux => Seq("xdg-open", url)
+    case Platform.MacOS => Seq("open", url)
+    case Platform.Windows =>
+      // Avoid `cmd /c start`, since cmd would interpret special characters
+      // such as `&` in URLs. The shell handler doesn't resolve relative paths
+      // reliably, so make existing files absolute.
+      val target =
+        try
+          val path = os.Path(url, os.pwd)
+          if os.exists(path) then path.toString else url
+        catch case _: IllegalArgumentException => url
+      Seq("rundll32", "url.dll,FileProtocolHandler", target)
+  try os.proc(cmd).call(check = false).exitCode
   catch
     case _: java.io.IOException =>
       System.err.println(
