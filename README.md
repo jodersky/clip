@@ -1015,8 +1015,8 @@ Or to open a file in the default text editor:
 clip.launch("README.md")
 ```
 
-As of now, `clip.launch` only works on Linux, on systems which support the
-xdg-open command.
+On Linux, `clip.launch` uses the `xdg-open` command, on macOS the `open`
+command, and on Windows the shell's default handler for the URL or file.
 
 
 
@@ -1143,8 +1143,12 @@ context, not a system context (e.g., a daemon).
 It is a good idea to use this utility class to ensure that your application
 respects the user's preferences for where to store files.
 
-As of now it uses the XDG Base Directory Specification to determine the
-appropriate directories, and it is currently only implemented for Linux.
+On Linux, it uses the XDG Base Directory Specification to determine the
+appropriate directories. On macOS, it uses `~/Library/Application Support`
+and `~/Library/Caches`, and on Windows `%APPDATA%` and `%LOCALAPPDATA%`.
+Explicitly set XDG environment variables are honored on all platforms.
+
+The defaults listed below are for Linux.
 
 
 A directory where the application can store its configuration files.
