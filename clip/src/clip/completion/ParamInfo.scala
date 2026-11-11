@@ -3,6 +3,7 @@ package clip.completion
 case class ParamInfo(
     names: Seq[String],
     isFlag: Boolean,
+    argName: Option[String],
     repeats: Boolean,
     completer: Completer,
     help: String

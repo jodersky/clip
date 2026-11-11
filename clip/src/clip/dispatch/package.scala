@@ -325,6 +325,7 @@ def generateCompletionRecursively(
           c.ParamInfo(
             names = p.names,
             isFlag = p.isFlag,
+            argName = p.argName,
             repeats = p.repeats,
             completer = p.completer,
             help = p.help

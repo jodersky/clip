@@ -24,9 +24,11 @@ object BashCompletion:
         |# - named: an array of named parameter specifications.
         |#
         |#   Each named parameter specification is a string of the form:
-        |#   (--name:completer:help), where --name is the name of the parameter,
-        |#   completer a completer type, and help a string which will be shown in the
-        |#   completion list next to the parameter.
+        |#   (--name:completer:argname:help), where --name is the name of the
+        |#   parameter, completer a completer type, argname the name of the parameter's
+        |#   value (usually its type, empty for flags), and help a string which will be
+        |#   shown in the completion list next to the parameter. Only the help string
+        |#   may contain colons.
         |#
         |# - positional: an array of positional parameter specifications, where each
         |#   specification is a string of the form: (completer)
@@ -122,7 +124,7 @@ object BashCompletion:
         |    local partial_completer="none"
         |
         |    # named parameter specifications
-        |    # (--name:completer:help)
+        |    # (--name:completer:argname:help)
         |    # completer is one of "flag", "none", "default", or "dynamic"
         |    local named=()
         |    # positional parameter specifications
@@ -173,7 +175,7 @@ object BashCompletion:
         |
         |                local spec=""
         |                for spec in "$${named[@]}"; do
-        |                    IFS=':' read -r name completer help <<< "$$spec"
+        |                    IFS=':' read -r name completer _ _ <<< "$$spec"
         |                    if [[ $$param == "$$name" ]]; then
         |                        partial_completer="$$completer"
         |                        if [[ $$word == *=* ]]; then
@@ -225,8 +227,13 @@ object BashCompletion:
         |    __${app}_debug "partial: '$$partial'"
         |    __${app}_debug "partial_completer: '$$partial_completer'"
         |
+        |    # Completions which have help text are of the form
+        |    # 'completion<tab>label<tab>help', where label is what is shown in the list
+        |    # of candidates (e.g. the completion followed by its argument type).
         |    local tab=$$'\t'
+        |    # length of the longest label
         |    local longest=0
+        |    local label=""
         |
         |    if [[ $$partial == -* ]]; then
         |        __${app}_debug "completing named parameter"
@@ -234,10 +241,14 @@ object BashCompletion:
         |        local spec=""
         |        for spec in "$${named[@]}"; do
         |            if [[ $$spec == "$$partial"* ]]; then
-        |                IFS=':' read -r name completer help <<< "$$spec"
-        |                COMPREPLY+=("$$name$$tab$$help")
-        |                if (( $${#name} > longest )); then
-        |                    longest=$${#name}
+        |                IFS=':' read -r name completer argname help <<< "$$spec"
+        |                label="$$name"
+        |                if [[ -n $$argname ]]; then
+        |                    label+=" <$$argname>"
+        |                fi
+        |                COMPREPLY+=("$$name$$tab$$label$$tab$$help")
+        |                if (( $${#label} > longest )); then
+        |                    longest=$${#label}
         |                fi
         |            fi
         |        done
@@ -248,7 +259,7 @@ object BashCompletion:
         |        for cmd in "$${subcommands[@]}"; do
         |            if [[ $$cmd == "$$partial"* ]]; then
         |                IFS=':' read -r name help <<< "$$cmd"
-        |                COMPREPLY+=("$$name$$tab$$help")
+        |                COMPREPLY+=("$$name$$tab$$name$$tab$$help")
         |                if (( $${#name} > longest )); then
         |                    longest=$${#name}
         |                fi
@@ -311,16 +322,25 @@ object BashCompletion:
         |
         |__${app}_format_replies() {
         |    local tab=$$'\t'
-        |    local comp desc maxdesclength
+        |    local comp desc label maxdesclength
         |    local longest=$$1
         |
         |    local i ci
         |    for ci in $${!COMPREPLY[*]}; do
         |        comp=$${COMPREPLY[ci]}
-        |        # properly format the description string which follows a tab character if there is one
-        |        if [[ "$$comp" == *$$tab* ]]; then
-        |            desc=$${comp#*$$tab}
-        |            comp=$${comp%%$$tab*}
+        |        # format completions of the form 'completion<tab>label<tab>help' as the
+        |        # label followed by the help text, aligned to the longest label
+        |        if [[ "$$comp" == *"$$tab"*"$$tab"* ]]; then
+        |            label=$${comp#*"$$tab"}
+        |            desc=$${label#*"$$tab"}
+        |            label=$${label%%"$$tab"*}
+        |            comp=$$label
+        |
+        |            # nothing to align if there is no help text
+        |            if [[ -z $$desc ]]; then
+        |                COMPREPLY[ci]=$$comp
+        |                continue
+        |            fi
         |
         |            # $$COLUMNS stores the current shell width.
         |            # remove an extra 4 because we add 2 spaces and 2 parentheses.
@@ -373,9 +393,12 @@ object BashCompletion:
             case Completer.OneOf(words) => s"oneof(${words.mkString(",")})"
             case Completer.Dynamic(_)   => "dynamic"
 
+      // colons are used as separators in the spec
+      val argName = param.argName.getOrElse("").replace(":", " ")
+
       if param.isNamed then
         for name <- param.names do
-          b ++= s"""  named+=("$name:$completerStr:${param.help}")\n"""
+          b ++= s"""  named+=("$name:$completerStr:$argName:${param.help}")\n"""
       else
         b ++= s"""  positional+=("$completerStr")\n"""
         if param.repeats then b ++= s"""  repeat_pos=$ppos\n"""

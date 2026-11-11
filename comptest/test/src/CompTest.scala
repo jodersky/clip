@@ -77,6 +77,9 @@ object CompTest extends TestSuite:
       val actual = completionResults(test)
       assert(expected.toSet == actual.toSet)
 
+    // return the raw log, for checking how candidates are displayed
+    os.read(log)
+
   val tests = Tests:
     val base = os.Path(sys.env("MILL_WORKSPACE_ROOT"))
     test("completion1"):
@@ -84,7 +87,7 @@ object CompTest extends TestSuite:
       os.write(os.pwd / "dummy2.txt", "dummy")
       os.write(os.pwd / "dummy3.txt", "dummy")
 
-      testCompletions(base / "out" / "examples" / "completion1" / "assembly.dest" / "out.jar")(
+      val log = testCompletions(base / "out" / "examples" / "completion1" / "assembly.dest" / "out.jar")(
         "app --" -> Seq(
           "--string-param",
           "--path-param",
@@ -106,9 +109,13 @@ object CompTest extends TestSuite:
         "app --custom-param=bar " -> Seq()
       )
 
+      // named parameters are listed with their argument type, flags without
+      assert(log.contains("'--string-param <string>  (string parameter has no completion)'"))
+      assert(log.contains("'--help                   (Show help message)'"))
+
     test("completion2"):
 
-      testCompletions(base / "out" / "examples" / "completion2" / "assembly.dest" / "out.jar")(
+      val log = testCompletions(base / "out" / "examples" / "completion2" / "assembly.dest" / "out.jar")(
         "app --" -> Seq(
           "--set",
           "--help",
@@ -129,4 +136,7 @@ object CompTest extends TestSuite:
         "app --set=2 subcmd1 --item b" -> Seq("banana", "blueberry"),
         "app --set=2 subcmd1 --item=b" -> Seq("banana", "blueberry")
       )
+
+      // no trailing padding for parameters without help text
+      assert(log.contains("'--set <integer>'"))
 
