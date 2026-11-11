@@ -187,6 +187,20 @@ Here are a few other options to check out:
 
 ## Changes
 
+- 0.3.0 2026-11-11
+
+  - Help and error messages are colored when output is a terminal (respects
+    `--color`, `NO_COLOR` and `FORCE_COLOR`)
+  - `--color` is now processed before other eager parameters, so that e.g.
+    `--color=never --help` works
+  - Shell completion no longer depends on the bash-completion package, and
+    shows parameter types in completions
+  - Implement `launch` and user directories for macOS and Windows
+  - Behavior change: `sys.exit()` is only called when a command fails (non-zero
+    exit code). On success, the JVM exits normally, i.e. it waits for any
+    non-daemon threads to terminate.
+  - fix: `style(bold = true)` was not rendered as bold
+
 - 0.2.3 2026-08-29
 
   Add scroll-region based progress bars, which support arbitrary writes to
