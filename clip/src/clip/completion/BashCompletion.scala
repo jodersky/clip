@@ -66,11 +66,47 @@ object BashCompletion:
         |    fi
         |}
         |
+        |# Populate the caller's 'words' and 'cword' variables from COMP_WORDS and
+        |# COMP_CWORD, rejoining words that bash split on '=' (which is part of
+        |# COMP_WORDBREAKS). E.g. '--opt=value' is split by bash into
+        |# ('--opt' '=' 'value'), but is a single word here.
+        |#
+        |# This is equivalent to `_get_comp_words_by_ref -n = words cword` from the
+        |# bash-completion package, but avoids depending on it.
+        |__${app}_get_words() {
+        |    words=()
+        |    cword=0
+        |    # remaining part of the command line, used to detect whitespace between
+        |    # words
+        |    local line="$$COMP_LINE"
+        |    local i j=0 word
+        |    for ((i = 0; i < $${#COMP_WORDS[@]}; i++)); do
+        |        word="$${COMP_WORDS[i]}"
+        |        if ((i > 0)) && [[ $$word =~ ^=+$$ ]]; then
+        |            # if the '=' is not preceded by whitespace, append it to the
+        |            # previous word (but never to the command itself)
+        |            if [[ $$line != [[:blank:]]* ]] && ((j > 1)); then
+        |                j=$$((j - 1))
+        |            fi
+        |            words[j]="$${words[j]-}$$word"
+        |            ((i == COMP_CWORD)) && cword=$$j
+        |            line="$${line#*"$$word"}"
+        |            # if the '=' is followed by whitespace, start a new word,
+        |            # otherwise the next word will be appended to this one
+        |            [[ $$line == [[:blank:]]* ]] && j=$$((j + 1))
+        |            continue
+        |        fi
+        |        words[j]="$${words[j]-}$$word"
+        |        ((i == COMP_CWORD)) && cword=$$j
+        |        line="$${line#*"$$word"}"
+        |        j=$$((j + 1))
+        |    done
+        |}
+        |
         |# main completion handler
         |__${app}_handle_completion() {
-        |    #shellcheck disable=SC2034
-        |    local cur prev words cword # (cur and prev are unused here)
-        |    _get_comp_words_by_ref -n = cur prev words cword
+        |    local words=() cword=0
+        |    __${app}_get_words
         |
         |    # current argument position (starts at 1, since word 0 is the command itself)
         |    local apos=1

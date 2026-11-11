@@ -20,7 +20,6 @@ object CompTest extends TestSuite:
     // it also suppresses bash completions. Hence, we echo a marker
     // line after setup, which we can use to drop uninteresting output.
     val in = Seq(
-      "source /usr/share/bash-completion/bash_completion",
       s"source $script",
     ) ++ tests.map((cmd, _) =>
       s"$cmd\t"
@@ -101,7 +100,10 @@ object CompTest extends TestSuite:
         "app --custom-param b" -> Seq("bar", "baz"),
         "app --custom-param ba" -> Seq("bar", "baz"),
         "app --custom-param bar" -> Seq("bar"),
-        "app --custom-param bar " -> Seq()
+        "app --custom-param bar " -> Seq(),
+        "app --custom-param=" -> Seq("foo", "bar", "baz"),
+        "app --custom-param=b" -> Seq("bar", "baz"),
+        "app --custom-param=bar " -> Seq()
       )
 
     test("completion2"):
@@ -122,6 +124,9 @@ object CompTest extends TestSuite:
         "app subcmd2 alpha d" -> Seq("delta"),
         "app subcmd2 alpha delta " -> Seq("delta", "epsilon"),
         "app subcmd2 alpha delta epsilon -" -> Seq("--named", "--help"),
-        "app subcmd2 alpha delta epsilon --named " -> Seq("one", "two", "three")
+        "app subcmd2 alpha delta epsilon --named " -> Seq("one", "two", "three"),
+        "app subcmd2 alpha delta epsilon --named=t" -> Seq("two", "three"),
+        "app --set=2 subcmd1 --item b" -> Seq("banana", "blueberry"),
+        "app --set=2 subcmd1 --item=b" -> Seq("banana", "blueberry")
       )
 
