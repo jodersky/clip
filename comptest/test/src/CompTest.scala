@@ -104,6 +104,19 @@ object CompTest extends TestSuite:
         "app --custom-param bar " -> Seq()
       )
 
+    test("argoptional"):
+      testCompletions(base / "out" / "examples" / "argoptional" / "assembly.dest" / "out.jar")(
+        "app --j" -> Seq("--jobs"),
+        // the optional argument is not consumed from the next word...
+        "app --jobs " -> Seq("build", "test"),
+        "app -j " -> Seq("build", "test"),
+        "app --jobs b" -> Seq("build"),
+        // ...but is completed when embedded
+        "app --jobs=" -> Seq("1", "2", "4", "8"),
+        "app -j=" -> Seq("1", "2", "4", "8"),
+        "app --jobs=4 " -> Seq("build", "test")
+      )
+
     test("completion2"):
 
       testCompletions(base / "out" / "examples" / "completion2" / "assembly.dest" / "out.jar")(

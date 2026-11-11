@@ -55,6 +55,11 @@ object BashCompletion:
         |#   treated as a positional parameter, otherwise it would be treated as the
         |#   argument to --foo.
         |#
+        |# - ?<completer>: (e.g. '?none', '?default') indicates that the named
+        |#   parameter takes an optional argument, which can only be given in embedded
+        |#   form, e.g. `--foo=value`. Like 'flag', `--foo bar` treats 'bar' as a
+        |#   positional parameter, but `--foo=<partial>` is completed with <completer>.
+        |#
         |# shellcheck shell=bash
         |""".stripMargin
 
@@ -143,8 +148,11 @@ object BashCompletion:
         |                        if [[ $$word == *=* ]]; then
         |                            # completing the value after '='
         |                            partial="$${word#*=}"
-        |                        # special completer "flag" means no argument
-        |                        elif [[ $$completer != "flag" ]]; then
+        |                            # drop the optional-argument marker, if any
+        |                            partial_completer="$${completer#[?]}"
+        |                        # special completer "flag" and optional arguments
+        |                        # ("?<completer>") never consume the next word
+        |                        elif [[ $$completer != "flag" && $$completer != [?]* ]]; then
         |                            partial="$${words[$$apos]}"
         |                            apos=$$((apos + 1))
         |                        fi
@@ -331,11 +339,12 @@ object BashCompletion:
       val completerStr =
         if param.isFlag then "flag"
         else
-          param.completer match
+          val base = param.completer match
             case Completer.Empty        => "none"
             case Completer.Default      => "default"
             case Completer.OneOf(words) => s"oneof(${words.mkString(",")})"
             case Completer.Dynamic(_)   => "dynamic"
+          if param.argOptional then s"?$base" else base
 
       if param.isNamed then
         for name <- param.names do

@@ -72,7 +72,11 @@ private class macros(using val qctx: Quotes):
     else if tpe =:= TypeRepr.of[Double] then Literal(DoubleConstant(0.0))
     else if tpe =:= TypeRepr.of[Char] then Literal(CharConstant('\u0000'))
     else if tpe =:= TypeRepr.of[Boolean] then Literal(BooleanConstant(false))
-    else Literal(NullConstant())
+    else if TypeRepr.of[Null] <:< tpe then Literal(NullConstant())
+    else
+      // e.g. unions of value types, such as `Boolean | Int`
+      tpe.asType match
+        case '[t] => '{ null.asInstanceOf[t] }.asTerm
 
   /** What is known statically about a command/group method
     *
@@ -206,7 +210,8 @@ private class macros(using val qctx: Quotes):
                           else Expr(false)
                         },
                         help = ${ arg.help },
-                        completer = ${ arg.completer }
+                        completer = ${ arg.completer },
+                        argOptional = ${ Expr(arg.argOptional) }
                       )
                     }
               )
@@ -229,14 +234,43 @@ private class macros(using val qctx: Quotes):
         symbol: Symbol,
         api: Expr[Api],
         default: Option[Expr[() => ?]],
-        completer: Expr[clip.completion.Completer]
+        completer: Expr[clip.completion.Completer],
+        // the parameter is of type `Boolean | T`; `reader` and `completer` are
+        // for `T`
+        argOptional: Boolean
     )
     case Context(symbol: Symbol)
+
+  /** If the given type is a union containing `Boolean` and at least one other
+    * type, return the union of the other types.
+    *
+    * Such types are used for named parameters with optional arguments, e.g.
+    * `jobs: Boolean | Int = false` allows `--jobs` (true) and `--jobs=4`.
+    */
+  def optionalArgType(tpe: TypeRepr): Option[TypeRepr] =
+    def members(t: TypeRepr): List[TypeRepr] = t.dealias match
+      case OrType(a, b) => members(a) ++ members(b)
+      case other        => List(other)
+    tpe.dealias match
+      case _: OrType =>
+        val all = members(tpe)
+        val (bools, rest) = all.partition(_ =:= TypeRepr.of[Boolean])
+        if bools.nonEmpty && rest.nonEmpty then
+          Some(rest.reduce(OrType(_, _)))
+        else None
+      case _ => None
 
   def paramInfoForParam(
       symbol: Symbol,
       defaults: Map[Symbol, Expr[() => ?]]
   ): ParamInfo =
+
+    def checkOptionalArgIsNamed(isNamed: Boolean): Unit =
+      if !isNamed then
+        report.error(
+          s"Parameter '${symbol.name}' takes an optional argument (it is a union of Boolean and another type), but is not a named parameter. Only named parameters (e.g. --${clip.util.text.kebabify(symbol.name)}) may have optional arguments. Hint: give it a default value or a name starting with '-'.",
+          symbol.pos.get
+        )
 
     def elemReader(
         elemTpe: TypeRepr,
@@ -281,6 +315,10 @@ private class macros(using val qctx: Quotes):
 
     annots match
       case Nil =>
+        val tpe = symbol.termRef.widenTermRefByName
+        val optTpe = optionalArgType(tpe)
+        if optTpe.isDefined then checkOptionalArgIsNamed(defaults.contains(symbol))
+        val valueTpe = optTpe.getOrElse(tpe)
         ParamInfo.Arg(
           name =
             if defaults.contains(symbol) then
@@ -289,19 +327,20 @@ private class macros(using val qctx: Quotes):
           aliases = '{ Seq() },
           help = '{ "" },
           reader = elemReader(
-            symbol.termRef.widenTermRefByName,
+            valueTpe,
             '{ clip.derivation.default },
             false
           ),
           collectionFactory = None,
-          flag = symbol.termRef.widenTermRefByName <:< TypeRepr.of[Boolean],
+          flag = tpe <:< TypeRepr.of[Boolean],
           symbol = symbol,
           api = '{ clip.derivation.default },
           default = defaults.get(symbol),
           completer = paramCompleter(
-            symbol.termRef.widenTermRefByName,
+            valueTpe,
             '{ clip.derivation.default }
-          )
+          ),
+          argOptional = optTpe.isDefined
         )
       case head :: Nil if head.tpe <:< TypeRepr.of[Api#arg] =>
         // TODO: ideally we'd use `Expr` pattern matching to extract the
@@ -365,14 +404,21 @@ private class macros(using val qctx: Quotes):
               (symbol.termRef.widenTermRefByName, None)
         else (symbol.termRef.widenTermRefByName, None)
 
+        val optTpe = optionalArgType(elemTpe)
+        if optTpe.isDefined then
+          // the name can only be checked if it is a literal
+          for name <- annotName.value do
+            checkOptionalArgIsNamed(name.startsWith("-"))
+        val valueTpe = optTpe.getOrElse(elemTpe)
+
         val reader: Expr[Api#Reader[?]] =
           if annotReader.asTerm.symbol.name.contains("$default$") then
-            elemReader(elemTpe, apiExpr, repeats)
+            elemReader(valueTpe, apiExpr, repeats)
           else annotReader
 
         val completer: Expr[clip.completion.Completer] =
           if annotCompleter.asTerm.symbol.name.contains("$default$") then
-            paramCompleter(elemTpe, apiExpr)
+            paramCompleter(valueTpe, apiExpr)
           else annotCompleter
 
         ParamInfo.Arg(
@@ -385,7 +431,8 @@ private class macros(using val qctx: Quotes):
           symbol = symbol,
           api = apiExpr,
           default = defaults.get(symbol),
-          completer = completer
+          completer = completer,
+          argOptional = optTpe.isDefined
         )
       case head :: Nil if head.tpe <:< TypeRepr.of[clip.derivation.context] =>
         ParamInfo.Context(symbol)
@@ -473,7 +520,8 @@ private class macros(using val qctx: Quotes):
                                   .asInstanceOf[scala.collection.Factory[
                                     elem,
                                     col
-                                  ]]
+                                  ]],
+                                argOptional = ${ Expr(arg.argOptional) }
                               )
                             }
                       case None =>
@@ -495,7 +543,8 @@ private class macros(using val qctx: Quotes):
                                       }
                                     case None =>
                                       '{ None }
-                                }
+                                },
+                                argOptional = ${ Expr(arg.argOptional) }
                               )
                             }
                     arg.symbol.termRef.widenTermRefByName.asType match

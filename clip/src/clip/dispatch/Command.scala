@@ -74,16 +74,29 @@ case class ParamHelp(
     names: Seq[String],
     help: String,
     repeats: Boolean,
-    argName: Option[String]
+    argName: Option[String],
+    argOptional: Boolean = false
 )
 
+/** A parameter of a command.
+  *
+  * @param argName
+  *   The name of the parameter's argument, as shown in help messages. `None`
+  *   means that the parameter is a flag, i.e. it does not take an argument.
+  * @param argOptional
+  *   Only applicable to named parameters which have an `argName`. If true, the
+  *   argument is optional and can only be given in embedded form, e.g.
+  *   `--jobs` or `--jobs=4`. Since the argument is optional, `--jobs 4` is
+  *   interpreted as `--jobs` without argument, followed by a separate `4`.
+  */
 case class Param(
     names: Seq[String],
     argName: Option[String] = Some("value"),
     endOfNamed: Boolean = false,
     repeats: Boolean = false,
     help: String = "",
-    completer: clip.completion.Completer = clip.completion.Completer.Empty
+    completer: clip.completion.Completer = clip.completion.Completer.Empty,
+    argOptional: Boolean = false
 ):
 
   def isFlag = argName.isEmpty
@@ -91,7 +104,9 @@ case class Param(
   def paramDecl = clip.getopt.ParamDecl(
     name = names.head,
     aliases = names.tail,
-    flag = argName.isEmpty,
+    // getopt flags never consume the next argument, but may still have an
+    // embedded argument (e.g. `--jobs=4`)
+    flag = argName.isEmpty || argOptional,
     endOfNamed = endOfNamed,
     repeats = repeats
   )
@@ -100,5 +115,6 @@ case class Param(
     names = names,
     help = help,
     repeats = repeats,
-    argName = argName
+    argName = argName,
+    argOptional = argOptional
   )

@@ -223,16 +223,26 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
       completer: clip.completion.Completer = null // override completer
   ) extends StaticAnnotation
 
+  /** @param flag
+    *   the parameter is a boolean flag; a missing argument is read as "true"
+    * @param argOptional
+    *   the parameter is of type `Boolean | T` and takes an optional argument;
+    *   a missing argument results in `true`, and a given argument is read with
+    *   the reader (which is a reader for `T`)
+    */
   def parseSingleParam[P](
       flag: Boolean,
       name: String,
       args: Iterable[clip.getopt.Arg],
       reader: Reader[P],
-      default: Option[() => P]
+      default: Option[() => P],
+      argOptional: Boolean = false
   ): InvocationResult[P] =
     def read(nameUsed: String, argOpt: Option[String]): InvocationResult[P] =
       val arg: String = argOpt match
-        case Some(s)      => s
+        case Some(s)             => s
+        case None if argOptional =>
+          return InvocationResult.Success(true.asInstanceOf[P])
         case None if flag => "true"
         case None         =>
           return InvocationResult.ParamError(invalid =
@@ -257,7 +267,8 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
       flag: Boolean,
       args: Iterable[clip.getopt.Arg],
       reader: Reader[Elem],
-      factory: scala.collection.Factory[Elem, Col]
+      factory: scala.collection.Factory[Elem, Col],
+      argOptional: Boolean = false
   ): InvocationResult[Col] =
     val builder = factory.newBuilder
 
@@ -270,6 +281,8 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
       val result = valueOpt match
         case Some(value) =>
           reader.read(value)
+        case None if argOptional =>
+          ReadResult.Success(true.asInstanceOf[Elem])
         case None if flag =>
           reader.read("true")
         case None =>

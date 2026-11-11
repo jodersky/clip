@@ -268,10 +268,13 @@ def help2(
     val short =
       if long.length == 2 then ""
       else param.names.find(_.length == 2).getOrElse("")
-    val argname = param.argName.map(n => s"<$n>").getOrElse("")
+    val argname = param.argName match
+      case Some(n) if param.argOptional => s"[=<$n>]"
+      case Some(n)                      => s" <$n>"
+      case None                         => " "
 
-    if short != "" then s"  $short, $long $argname"
-    else s"  $long $argname"
+    if short != "" then s"  $short, $long$argname"
+    else s"  $long$argname"
 
   val positionalLhs = for param <- positional yield s"  ${param.names.head}"
 
@@ -325,6 +328,7 @@ def generateCompletionRecursively(
           c.ParamInfo(
             names = p.names,
             isFlag = p.isFlag,
+            argOptional = p.argOptional,
             repeats = p.repeats,
             completer = p.completer,
             help = p.help

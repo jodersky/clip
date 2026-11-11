@@ -100,6 +100,73 @@ object DerivationTest extends TestSuite:
       )
       assert(result == clip.dispatch.InvocationResult.Success(12))
 
+    test("optional argument"):
+      import clip.dispatch.InvocationResult.{Success, ParamError}
+      object Container:
+        @clip.command()
+        def foo(
+            jobs: Boolean | Int = false,
+            @clip.arg("rest", repeats = true) rest: Seq[String]
+        ) = (jobs, rest)
+
+        val cmd = clip.derivation.commandFor(this)
+
+      val cmd = Container.cmd.asInstanceOf[clip.dispatch.Command[Any, ?]]
+      assert(testInvoke(cmd, List()) == Success((false, Seq())))
+      assert(testInvoke(cmd, List("--jobs")) == Success((true, Seq())))
+      assert(testInvoke(cmd, List("--jobs=4")) == Success((4, Seq())))
+      // the argument must be embedded; a separate word is not consumed
+      assert(testInvoke(cmd, List("--jobs", "4")) == Success((true, Seq("4"))))
+      assert(testInvoke(cmd, List("--jobs=x")).isInstanceOf[ParamError])
+
+      val param = cmd.params.find(_.names.head == "--jobs").get
+      assert(param.argOptional)
+      assert(param.argName.isDefined)
+
+    test("optional argument annotated"):
+      import clip.dispatch.InvocationResult.Success
+      object Container:
+        @clip.command()
+        def foo(
+            @clip.arg("--color", aliases = Seq("-c")) color: Boolean | String =
+              false,
+            @clip.arg("file") file: String
+        ) = (color, file)
+
+        val cmd = clip.derivation.commandFor(this)
+
+      val cmd = Container.cmd.asInstanceOf[clip.dispatch.Command[Any, ?]]
+      assert(testInvoke(cmd, List("-c", "a")) == Success((true, "a")))
+      assert(testInvoke(cmd, List("--color", "a")) == Success((true, "a")))
+      assert(
+        testInvoke(cmd, List("--color=always", "a")) == Success(("always", "a"))
+      )
+      assert(testInvoke(cmd, List("a")) == Success((false, "a")))
+
+    test("optional argument repeated"):
+      import clip.dispatch.InvocationResult.Success
+      object Container:
+        @clip.command()
+        def foo(
+            @clip.arg("--v", repeats = true) v: Seq[Boolean | Int]
+        ) = v
+
+        val cmd = clip.derivation.commandFor(this)
+
+      val cmd = Container.cmd.asInstanceOf[clip.dispatch.Command[Any, ?]]
+      assert(
+        testInvoke(cmd, List("--v", "--v=2")) == Success(Seq(true, 2))
+      )
+
+    test("optional argument must be named"):
+      val errors = scala.compiletime.testing.typeCheckErrors("""
+        object Container:
+          @clip.command()
+          def foo(jobs: Boolean | Int) = jobs
+          val cmd = clip.derivation.commandFor(this)
+      """)
+      assert(errors.exists(_.message.contains("optional argument")))
+
     test("repeated map"):
       object Container:
         @clip.command()

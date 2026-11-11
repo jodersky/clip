@@ -18,7 +18,7 @@ trait UtestModule extends ScalaModule with TestModule:
   def mvnDeps = Seq(thirdparty.utest)
 
 trait Publish extends PublishModule:
-  def publishVersion = "0.2.3"
+  def publishVersion = "0.3.0"
   def pomSettings = PomSettings(
     description = "A Scala library for building command line interfaces",
     organization = "io.crashbox",
@@ -172,6 +172,7 @@ object examples extends Module:
   object argrepeated extends ExampleApp
   object argtypes extends ExampleApp
   object argtypes2 extends ExampleApp
+  object argoptional extends ExampleApp
   object argeager extends ExampleApp
   object commands extends ExampleApp
   object commandvalues extends ExampleApp
@@ -199,6 +200,7 @@ object examples extends Module:
     argrepeated,
     argtypes,
     argtypes2,
+    argoptional,
     argeager,
     commands,
     commandvalues,
@@ -339,7 +341,8 @@ object comptest extends ScalaModule:
     def assemblies = Task:
       Seq(
         examples.completion1.assembly(),
-        examples.completion2.assembly()
+        examples.completion2.assembly(),
+        examples.argoptional.assembly()
       )
 
     override protected def testTask(

@@ -5,7 +5,8 @@ case class ParamInfo(
     isFlag: Boolean,
     repeats: Boolean,
     completer: Completer,
-    help: String
+    help: String,
+    argOptional: Boolean = false
 ):
   def isNamed = names.head.startsWith("-")
 
