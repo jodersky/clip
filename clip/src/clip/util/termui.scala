@@ -172,12 +172,12 @@ class Raw(s: String) extends Tag:
   override def applyTo(builder: StringBuilder, state: State): Unit =
     if state.fg != null then builder ++= state.fg.toAnsi(0)
     if state.bg != null then builder ++= state.bg.toAnsi(10)
-    if state.bold != null then
-      if state.bold.asInstanceOf[Boolean] then builder ++= "\u001B[1m"
-      else builder ++= "\u001B[22m"
-    if state.dim != null then
-      if state.dim.asInstanceOf[Boolean] then builder ++= "\u001B[2m"
-      else builder ++= "\u001B[22m"
+    // bold and dim share the same reset code (22), so they must be handled
+    // together: resetting one would otherwise clear the other
+    if state.bold != null || state.dim != null then
+      builder ++= "\u001B[22m"
+      if state.bold == true then builder ++= "\u001B[1m"
+      if state.dim == true then builder ++= "\u001B[2m"
     if state.underline != null then
       if state.underline.asInstanceOf[Boolean] then builder ++= "\u001B[4m"
       else builder ++= "\u001B[24m"

@@ -54,37 +54,46 @@ def invoke(
     stderr: java.io.PrintStream = System.err
 ): Int =
   val (chain, result) = invokeRaw(command, (), args, stderr)
+  val c = Colorizer(stderr)
+  def hint() =
+    if chain.last.params.exists(_.names.head == "--help") then
+      stderr.println(s"run with ${c.literal("--help")} for more information")
+
   result match
     case InvocationResult.Success(_) =>
       0
     case InvocationResult.ParamError(missing, unknown, invalid) =>
       if unknown.nonEmpty then
-        stderr.println(s"unknown argument: '${unknown.head}'")
+        stderr.println(
+          s"${c.error("unknown argument")}: ${c.quoted(unknown.head)}"
+        )
       else
         for name <- missing do
-          stderr.println(s"missing required argument: '$name'")
+          stderr.println(
+            s"${c.error("missing required argument")}: ${c.quoted(name)}"
+          )
         for (name, reason) <- invalid do
-          stderr.println(s"invalid value for '$name': $reason")
-
-      if chain.last.params.exists(_.names.head == "--help") then
-        stderr.println("run with --help for more information")
+          stderr.println(
+            s"${c.error("invalid value")} for ${c.quoted(name)}: $reason"
+          )
+      hint()
       2
     case InvocationResult.MissingCommand() =>
-      stderr.println(s"missing subcommand for command '${chain.last.name}'")
-      if chain.last.params.exists(_.names.head == "--help") then
-        stderr.println("run with --help for more information")
+      stderr.println(
+        s"${c.error("missing subcommand")} for command ${c.quoted(chain.last.name)}"
+      )
+      hint()
       2
     case InvocationResult.UnknownCommand(commandName) =>
-      stderr.println(s"unknown command: '$commandName'")
-      if chain.last.params.exists(_.names.head == "--help") then
-        stderr.println("run with --help for more information")
+      stderr.println(s"${c.error("unknown command")}: ${c.quoted(commandName)}")
+      hint()
       val similar = clip.util.text.jaroWinklerClosest(
         commandName,
         chain.last.listChildren().map(_.name)
       )
       if similar.nonEmpty then
-        stderr.println(s"similar commands:")
-        for cmd <- similar do stderr.println(s"  $cmd")
+        stderr.println(c.header("similar commands:"))
+        for cmd <- similar do stderr.println(s"  ${c.literal(cmd)}")
       2
     case InvocationResult.Exception(clip.util.AbortException(message, code)) =>
       stderr.println(message)
@@ -171,30 +180,56 @@ def invokeRaw[Ctx](
   sys.error("unreachable")
 end invokeRaw
 
+/** Styles used for help and error messages. All styling is skipped if the
+  * target stream should not be colored (see [[clip.util.termui.ColorMode]]),
+  * in which case the output is plain text.
+  */
+private class Colorizer(out: java.io.PrintStream):
+  val enabled: Boolean = clip.util.termui.ColorMode.global.useColor(out)
+
+  // SGR codes are emitted directly (rather than via termui.style) to keep the
+  // output compact
+  private def sgr(codes: String)(s: String): String =
+    if enabled && s.nonEmpty then s"\u001B[${codes}m$s\u001B[0m" else s
+
+  def header(s: String) = sgr("33")(s) // yellow
+  def literal(s: String) = sgr("36")(s) // cyan
+  def placeholder(s: String) = sgr("32")(s) // green
+  def error(s: String) = sgr("1;31")(s) // bold, red
+  def quoted(s: String) = sgr("33")(s"'$s'") // yellow
+
 def usage2(
     out: java.io.PrintStream,
     command: Command[?, ?],
     chain: Iterable[String]
 ) =
-  out.print("Usage: ")
-  out.print(chain.mkString(" "))
+  val c = Colorizer(out)
+  out.print(c.header("Usage:"))
+  out.print(" ")
+  out.print(c.literal(chain.mkString(" ")))
 
   val (named, positional) =
     command.params.map(_.paramHelp).partition(_.names.head.startsWith("-"))
 
-  if named.nonEmpty then out.print(" [options]")
+  if named.nonEmpty then out.print(" " + c.placeholder("[options]"))
   if positional.nonEmpty then
     for param <- positional do
       out.print(" ")
-      out.print(param.names.head)
-      if param.repeats then out.print("...")
+      out.print(c.placeholder(param.names.head))
+      if param.repeats then out.print(c.placeholder("..."))
 
-  if !command.terminal then out.print(" <command> [<args>...]")
+  if !command.terminal then
+    out.print(" " + c.placeholder("<command> [<args>...]"))
 
   out.println()
 
+/** A left-hand column entry: its plain text (used for layout) and its styled
+  * rendering (which may contain ANSI escapes).
+  */
+private case class Lhs(plain: String, styled: String)
+
 private def sideBySide(
-    col1: Seq[String],
+    col1: Seq[Lhs],
     col2: Seq[String],
     col1Width: Int,
     termWidth: Int,
@@ -205,7 +240,7 @@ private def sideBySide(
   if col2Width < 50 then
     // not enough space for two columns, print differently
     for (lhs, rhs) <- col1.zip(col2) do
-      out.println(lhs)
+      out.println(lhs.styled)
       val lines = clip.util.text.WrappedLines(
         rhs.iterator,
         termWidth - 4
@@ -215,15 +250,19 @@ private def sideBySide(
         out.println(line)
       out.println()
   else
+    // the left column is at most col1Width wide by construction, so it never
+    // needs wrapping; only the right column is wrapped
     for (lhs, rhs) <- col1.zip(col2) do
-      clip.util.text.twoCols(
-        lhs,
-        rhs,
-        col1Width,
-        col2Width,
-        "  ",
-        out
-      )
+      val lines = clip.util.text.WrappedLines(rhs.iterator, col2Width)
+      out.print(lhs.styled)
+      if lines.hasNext then
+        out.print(" " * (col1Width - lhs.plain.length))
+        out.print("  ")
+        out.println(lines.next())
+        for line <- lines do
+          out.print(" " * (col1Width + 2))
+          out.println(line)
+      else out.println()
 
 /** Generate a help message for the given command.
   *
@@ -244,12 +283,16 @@ private def sideBySide(
   *   add               Add something
   *   remove            Remove something
   * ```
+  *
+  * The message is colored if the output stream supports it and the global
+  * color mode allows it.
   */
 def help2(
     out: java.io.PrintStream,
     command: Command[?, ?],
     chain: Iterable[String]
 ): Unit =
+  val c = Colorizer(out)
   usage2(out, command, chain)
   out.println()
 
@@ -270,29 +313,39 @@ def help2(
       else param.names.find(_.length == 2).getOrElse("")
     val argname = param.argName.map(n => s"<$n>").getOrElse("")
 
-    if short != "" then s"  $short, $long $argname"
-    else s"  $long $argname"
+    if short != "" then
+      Lhs(
+        s"  $short, $long $argname",
+        s"  ${c.literal(short)}, ${c.literal(long)} ${c.placeholder(argname)}"
+      )
+    else
+      Lhs(
+        s"  $long $argname",
+        s"  ${c.literal(long)} ${c.placeholder(argname)}"
+      )
 
-  val positionalLhs = for param <- positional yield s"  ${param.names.head}"
+  val positionalLhs = for param <- positional yield
+    Lhs(s"  ${param.names.head}", s"  ${c.placeholder(param.names.head)}")
 
-  val commandLhs = for cmd <- command.listChildren() yield s"  ${cmd.name}"
+  val commandLhs = for cmd <- command.listChildren() yield
+    Lhs(s"  ${cmd.name}", s"  ${c.literal(cmd.name)}")
 
   var col1Width = 0
   for l <- namedLhs ++ positionalLhs ++ commandLhs do
-    if l.length > col1Width then col1Width = l.length
+    if l.plain.length > col1Width then col1Width = l.plain.length
 
   if named.nonEmpty then
-    out.println("Options:")
+    out.println(c.header("Options:"))
     sideBySide(namedLhs, named.map(_.help), col1Width, termWidth, out)
 
   if positional.nonEmpty then
-    out.println("Positional arguments:")
+    out.println(c.header("Positional arguments:"))
     sideBySide(positionalLhs, positional.map(_.help), col1Width, termWidth, out)
 
   if !command.terminal then
     val children = command.listChildren()
     if children.nonEmpty then
-      out.println("Commands:")
+      out.println(c.header("Commands:"))
       sideBySide(commandLhs, children.map(_.help), col1Width, termWidth, out)
 
 /** Generate a bash completion script for a command and its children

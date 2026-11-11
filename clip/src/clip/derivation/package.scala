@@ -298,6 +298,10 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
       version: Option[String]
   ): Seq[clip.dispatch.EagerParam] =
     val params = collection.mutable.ListBuffer.empty[clip.dispatch.EagerParam]
+    // --color comes first, so that it takes effect for the output of other
+    // eager params (e.g. `--color=never --help`)
+    if root then params += clip.dispatch.StandardEagerParams.color()
+
     params += clip.dispatch.StandardEagerParams.help()
 
     if version.isDefined then
@@ -305,7 +309,6 @@ trait Api extends ReaderApi with clip.completion.CompletionApi:
 
     if root then
       params += clip.dispatch.StandardEagerParams.completion()
-      params += clip.dispatch.StandardEagerParams.color()
 
     params.result()
 
